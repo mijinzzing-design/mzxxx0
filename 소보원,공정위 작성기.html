@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TicketBay SX · 소보원/공정위 회신 공문</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Pretendard:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #f0f2f5;
+  --surface:   #ffffff;
+  --surface2:  #f7f8fa;
+  --border:    #e2e6ec;
+  --border2:   #ccd2dc;
+  --accent:    #1755f4;
+  --accent-h:  #0f43d1;
+  --accent-dim:rgba(23,85,244,0.08);
+  --accent-dim2:rgba(23,85,244,0.14);
+  --success:   #059669;
+  --success-bg:rgba(5,150,105,0.08);
+  --warn:      #d97706;
+  --danger:    #dc2626;
+  --text:      #0f172a;
+  --text2:     #475569;
+  --text3:     #94a3b8;
+  --text4:     #cbd5e1;
+  --mono:      'IBM Plex Mono', monospace;
+  --sans:      'Noto Sans KR', 'Pretendard', sans-serif;
+  --radius:    6px;
+  --shadow-sm: 0 1px 3px rgba(15,23,42,.07), 0 1px 2px rgba(15,23,42,.05);
+  --shadow:    0 4px 16px rgba(15,23,42,.10), 0 1px 4px rgba(15,23,42,.06);
+  --shadow-lg: 0 16px 48px rgba(15,23,42,.14), 0 4px 12px rgba(15,23,42,.08);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+
+/* ── Header ── */
+.header{
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  padding:0 24px;
+  height:52px;
+  display:flex;align-items:center;gap:12px;
+  position:sticky;top:0;z-index:200;
+  box-shadow:var(--shadow-sm);
+}
+.header-mark{
+  display:flex;align-items:center;gap:10px;
+}
+.header-icon{
+  width:30px;height:30px;background:var(--accent);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:11px;font-weight:500;color:#fff;letter-spacing:.02em;
+}
+.header-name{
+  font-size:14px;font-weight:700;color:var(--text);letter-spacing:-.02em;
+}
+.header-sub{
+  font-size:12px;color:var(--text3);font-weight:400;
+}
+.header-divider{width:1px;height:20px;background:var(--border);margin:0 4px;}
+.header-badge{
+  font-size:11px;font-weight:500;color:var(--accent);
+  background:var(--accent-dim);border:1px solid var(--accent-dim2);
+  padding:2px 8px;border-radius:20px;
+}
+.header-time{
+  margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--text3);
+}
+
+/* ── Layout ── */
+.layout{display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 52px);}
+
+/* ── Left Panel ── */
+.panel-left{
+  background:#fff;border-right:1px solid var(--border);
+  overflow-y:auto;padding:20px;
+  display:flex;flex-direction:column;gap:16px;
+}
+
+.sec-label{
+  font-size:10px;font-weight:600;color:var(--text3);
+  letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:8px;
+}
+
+label{font-size:12px;color:var(--text2);font-weight:500;margin-bottom:4px;display:block;}
+
+input,select,textarea{
+  width:100%;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-family:var(--sans);font-size:12.5px;
+  padding:8px 11px;outline:none;
+  transition:border-color .15s, box-shadow .15s;
+  border-radius:var(--radius);
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-dim);
+  background:#fff;
+}
+textarea{resize:vertical;line-height:1.65;}
+.divider{border:none;border-top:1px solid var(--border);}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+/* 담당자 박스 */
+.sender-box{
+  background:var(--accent-dim);border:1px solid var(--accent-dim2);
+  border-radius:var(--radius);padding:12px 14px;
+  display:flex;flex-direction:column;gap:8px;
+}
+.sender-box-title{font-size:11px;font-weight:600;color:var(--accent);}
+.sender-box input{
+  background:#fff;border:1px solid var(--border);font-size:12px;padding:6px 10px;
+}
+
+/* 우선순위 */
+.priority-strip{
+  background:var(--surface2);border:1px solid var(--border);
+  padding:10px 13px;border-radius:var(--radius);
+  display:flex;flex-direction:column;gap:5px;
+}
+.pri-row{display:flex;align-items:center;gap:9px;font-size:11.5px;color:var(--text2);}
+.pri-badge{
+  font-family:var(--mono);font-size:10px;padding:1px 6px;
+  border-radius:4px;min-width:24px;text-align:center;font-weight:500;
+}
+.pri-badge.p1{background:rgba(5,150,105,.1);color:var(--success);border:1px solid rgba(5,150,105,.2);}
+.pri-badge.p2,.pri-badge.p3,.pri-badge.p4{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-dim2);}
+
+/* 생성 버튼 */
+.btn-gen{
+  width:100%;background:var(--accent);border:none;color:#fff;
+  font-family:var(--sans);font-size:13px;font-weight:600;
+  padding:12px;cursor:pointer;transition:all .15s;
+  border-radius:var(--radius);
+  box-shadow:0 2px 8px rgba(23,85,244,.3);
+  letter-spacing:-.01em;
+}
+.btn-gen:hover{background:var(--accent-h);box-shadow:0 4px 12px rgba(23,85,244,.4);transform:translateY(-1px);}
+.btn-gen:active{transform:translateY(0);}
+.btn-gen:disabled{background:var(--border2);cursor:not-allowed;color:#fff;box-shadow:none;transform:none;}
+
+.spinner{
+  width:13px;height:13px;border:2px solid rgba(255,255,255,.35);
+  border-top-color:#fff;border-radius:50%;
+  animation:spin .65s linear infinite;
+  display:inline-block;vertical-align:middle;margin-right:7px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── Right Panel ── */
+.panel-right{background:var(--bg);display:flex;flex-direction:column;overflow:hidden;}
+
+/* Toolbar */
+.out-toolbar{
+  padding:9px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+  background:#fff;flex-shrink:0;flex-wrap:wrap;
+}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--border2);flex-shrink:0;}
+.status-dot.ready{background:var(--success);}
+.status-dot.loading{background:var(--warn);animation:pulse 1s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.out-label{font-size:12px;font-weight:600;color:var(--text2);}
+.tb-sep{color:var(--border2);font-size:16px;}
+.tb-btn{
+  background:#fff;border:1px solid var(--border);color:var(--text2);
+  font-family:var(--sans);font-size:11.5px;padding:5px 11px;
+  cursor:pointer;transition:all .15s;border-radius:5px;white-space:nowrap;font-weight:500;
+}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+.tb-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+.tb-btn.g:hover{border-color:var(--success);color:var(--success);background:var(--success-bg);}
+.ml-auto{margin-left:auto;}
+
+/* AI 편집 패널 */
+.ai-panel{
+  background:#fff;border-bottom:1px solid var(--border);
+  padding:14px 20px;flex-shrink:0;display:none;
+}
+.ai-panel.on{display:block;}
+.ai-panel-title{
+  font-size:11px;font-weight:600;color:var(--accent);
+  letter-spacing:.04em;margin-bottom:10px;
+  display:flex;align-items:center;gap:6px;
+}
+.ai-panel-title::before{content:'✦';font-size:10px;}
+.ai-quick-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+.ai-q-btn{
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--text2);font-size:11.5px;padding:5px 11px;
+  cursor:pointer;border-radius:20px;transition:all .15s;
+  font-family:var(--sans);font-weight:500;
+}
+.ai-q-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+.ai-input-row{display:flex;gap:8px;}
+.ai-txt{
+  flex:1;background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);font-family:var(--sans);font-size:12px;
+  padding:7px 11px;outline:none;border-radius:var(--radius);
+  transition:border-color .15s,box-shadow .15s;
+}
+.ai-txt:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);background:#fff;}
+.ai-go{
+  background:var(--accent);border:none;color:#fff;font-size:12px;font-weight:600;
+  padding:7px 16px;cursor:pointer;border-radius:var(--radius);
+  white-space:nowrap;font-family:var(--sans);transition:all .15s;
+}
+.ai-go:hover{background:var(--accent-h);}
+.ai-go:disabled{background:var(--border2);cursor:not-allowed;}
+.ai-note{font-size:10.5px;color:var(--text3);margin-top:7px;}
+
+/* 출력 바디 */
+.out-body{flex:1;padding:32px 36px;overflow-y:auto;}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);gap:12px;}
+.empty-icon{font-size:40px;opacity:.35;}
+.empty-txt{font-size:12px;color:var(--text3);}
+
+/* ── 공문 ── */
+.doc{
+  background:#fff;color:#111827;max-width:680px;margin:0 auto;
+  padding:60px 68px;
+  box-shadow:var(--shadow-lg);
+  font-family:'Noto Sans KR',sans-serif;font-size:13px;line-height:1.95;
+  min-height:860px;position:relative;
+  border-radius:2px;
+}
+
+.doc-head-org{text-align:center;margin-bottom:30px;padding-bottom:20px;border-bottom:2px solid #111827;}
+.doc-org-name{font-size:20px;font-weight:700;letter-spacing:.05em;margin-bottom:4px;color:#111827;}
+.doc-org-sub{font-size:11.5px;color:#6b7280;letter-spacing:.03em;}
+
+.doc-title{
+  text-align:center;font-size:17px;font-weight:700;
+  letter-spacing:.04em;margin:22px 0;padding:11px 0;
+  border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;
+  color:#111827;
+}
+
+.doc-meta{width:100%;border-collapse:collapse;margin-bottom:28px;font-size:12.5px;}
+.doc-meta td{padding:6px 12px;border:1px solid #e5e7eb;vertical-align:top;}
+.doc-meta td:first-child{
+  background:#f9fafb;font-weight:600;width:76px;
+  white-space:nowrap;text-align:center;color:#374151;
+}
+
+/* 섹션 */
+.doc-sec{
+  position:relative;margin-bottom:6px;
+  border-radius:4px;transition:background .12s;padding:4px 6px;
+  border:1.5px solid transparent;
+}
+.doc-sec:hover{background:#f8faff;border-color:#e0e9ff;}
+.doc-sec.selected{border-color:#1755f4;background:#f8faff;}
+.doc-sec:hover .sec-ctrl,.doc-sec.selected .sec-ctrl{opacity:1;}
+.sec-ctrl{
+  position:absolute;top:4px;right:4px;
+  display:flex;gap:4px;opacity:0;transition:opacity .15s;z-index:10;
+}
+.s-btn{
+  font-size:10.5px;padding:3px 8px;
+  border:1px solid #d1d5db;background:#fff;color:#6b7280;
+  cursor:pointer;border-radius:4px;white-space:nowrap;
+  font-family:'Noto Sans KR',sans-serif;transition:all .12s;font-weight:500;
+  box-shadow:0 1px 2px rgba(0,0,0,.06);
+}
+.s-btn:hover{border-color:#1755f4;color:#1755f4;background:#f0f4ff;}
+.s-btn.del:hover{border-color:#dc2626;color:#dc2626;background:#fef2f2;}
+
+.sec-head{
+  font-size:13.5px;font-weight:700;color:#111827;
+  margin:20px 0 6px;padding:3px 4px;outline:none;border-radius:3px;
+}
+.sec-head[contenteditable=true]:focus{
+  background:rgba(23,85,244,.05);outline:1.5px dashed #1755f4;
+}
+.sec-body{
+  outline:none;padding:2px 4px;border-radius:3px;
+  line-height:2;font-size:13px;color:#1f2937;
+}
+.sec-body[contenteditable=true]:focus{
+  background:rgba(23,85,244,.04);outline:1.5px dashed #1755f4;
+}
+
+/* 문장 */
+.doc-para{position:relative;padding:1px 4px;border-radius:3px;}
+.doc-para:hover{background:rgba(220,38,38,.05);}
+.doc-para:hover .p-del{display:flex;}
+.p-del{
+  display:none;position:absolute;right:-2px;top:50%;transform:translateY(-50%);
+  width:18px;height:18px;background:#dc2626;color:#fff;border:none;
+  cursor:pointer;border-radius:3px;font-size:10px;
+  align-items:center;justify-content:center;line-height:1;
+  box-shadow:0 1px 3px rgba(0,0,0,.15);
+}
+
+/* AI 오버레이 */
+.ai-ov{
+  display:none;position:absolute;inset:0;
+  background:rgba(255,255,255,.82);backdrop-filter:blur(2px);
+  align-items:center;justify-content:center;
+  border-radius:4px;font-size:12px;color:#1755f4;
+  font-family:'IBM Plex Mono',monospace;gap:8px;z-index:20;
+}
+.ai-ov.show{display:flex;}
+.ai-spin{width:14px;height:14px;border:2px solid rgba(23,85,244,.2);border-top-color:#1755f4;border-radius:50%;animation:spin .65s linear infinite;}
+
+.edit-hint{
+  font-size:11px;color:var(--text3);text-align:center;
+  padding:8px;background:var(--accent-dim);
+  border-radius:5px;margin:0 auto;max-width:680px;
+  margin-top:8px;display:none;
+}
+
+.doc-footer{
+  margin-top:48px;text-align:right;
+  font-size:13px;line-height:2.1;
+  border-top:1px solid #e5e7eb;padding-top:20px;
+}
+.doc-footer .f-org{font-weight:700;font-size:15px;color:#111827;}
+.doc-footer .f-det{color:#4b5563;}
+.doc-footer .f-sign{margin-top:8px;font-size:14px;font-weight:700;color:#111827;}
+
+.doc-stamp{
+  position:absolute;bottom:120px;right:64px;
+  width:62px;height:62px;border:2.5px solid rgba(180,0,0,.3);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;color:rgba(180,0,0,.4);font-weight:700;
+  letter-spacing:-.02em;text-align:center;transform:rotate(-12deg);line-height:1.25;
+}
+
+/* scrollbar */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px;}
+
+@media print{
+  .header,.panel-left,.out-toolbar,.ai-panel,.sec-ctrl,.p-del,.edit-hint{display:none!important;}
+  .layout{display:block;height:auto;}
+  .panel-right{background:#fff;}
+  .out-body{padding:0;}
+  .doc{box-shadow:none;max-width:100%;}
+  .doc-sec{border:none!important;background:transparent!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="header">
+  <div class="header-mark">
+    <div class="header-icon">TB</div>
+    <div>
+      <div class="header-name">TicketBay SX</div>
+    </div>
+  </div>
+  <div class="header-divider"></div>
+  <div class="header-sub">소보원 · 공정위 회신 공문 작성기</div>
+  <div class="header-badge">SX Operations</div>
+  <div class="header-time" id="now-time"></div>
+</div>
+
+<div class="layout">
+
+  <!-- ── LEFT ── -->
+  <div class="panel-left">
+
+    <!-- API Key -->
+    <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:var(--radius);padding:12px 14px;">
+      <div class="sec-label" style="color:#1d4ed8;margin-bottom:8px;">Anthropic API Key</div>
+      <div style="position:relative;">
+        <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." style="padding-right:52px;background:#fff;border-color:#93c5fd;font-family:var(--mono);font-size:11px;">
+        <button onclick="toggleKey()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:1px solid #93c5fd;color:#3b82f6;font-size:10px;padding:2px 7px;cursor:pointer;border-radius:4px;font-weight:600;">표시</button>
+      </div>
+      <div style="font-size:10.5px;color:#3b82f6;margin-top:5px;">입력한 키는 브라우저 내에서만 사용됩니다</div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 수신기관 -->
+    <div>
+      <div class="sec-label">수신 기관</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div>
+          <label>기관</label>
+          <select id="agency">
+            <option value="kca">한국소비자원 (KCA)</option>
+            <option value="ftc">공정거래위원회 (FTC)</option>
+            <option value="both">소비자원 + 공정위</option>
+          </select>
+        </div>
+        <div class="two-col">
+          <div><label>사건번호 (선택)</label><input type="text" id="case-number" placeholder="2026-소보원-001"></div>
+          <div><label>민원 접수일</label><input type="date" id="received-date"></div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 상담내용 -->
+    <div>
+      <div class="sec-label">상담 내용</div>
+      <textarea id="cs-history" rows="7" placeholder="고객과의 상담 이력을 자유롭게 입력하세요.&#10;&#10;예)&#10;2026-03-10 고객 문의: SR석 구매했는데 E석 발권됨&#10;2026-03-14 환불 요청&#10;2026-03-20 판매자 귀책 확인, 환불 처리 완료"></textarea>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 수신공문 -->
+    <div>
+      <div class="sec-label">수신 공문 내용</div>
+      <textarea id="agency-mail" rows="7" placeholder="소보원 또는 공정위로부터 받은 메일/공문을 그대로 붙여넣으세요."></textarea>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 발신 담당자 -->
+    <div>
+      <div class="sec-label">발신 담당자</div>
+      <div class="sender-box">
+        <div class="sender-box-title">공문 하단에 표시되는 담당자 정보</div>
+        <div class="two-col">
+          <div><label>담당자 이름</label><input type="text" id="sender-name" value="김미진" placeholder="담당자 이름"></div>
+          <div><label>팀명</label><input type="text" id="sender-team" value="고객지원 SX팀" placeholder="팀명"></div>
+        </div>
+        <div><label>이메일</label><input type="text" id="sender-email" value="cs@ticketbay.co.kr" placeholder="이메일"></div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 우선순위 -->
+    <div>
+      <div class="sec-label">적용 기준 우선순위</div>
+      <div class="priority-strip">
+        <div class="pri-row"><span class="pri-badge p1">①</span><span>티켓베이 이용약관 · 내부 정책</span></div>
+        <div class="pri-row"><span class="pri-badge p2">②</span><span>전자상거래 소비자보호법</span></div>
+        <div class="pri-row"><span class="pri-badge p3">③</span><span>소비자기본법</span></div>
+        <div class="pri-row"><span class="pri-badge p4">④</span><span>공정거래법 관련 고시·지침</span></div>
+      </div>
+    </div>
+
+    <button class="btn-gen" id="btn-gen" onclick="generateLetter()">공문 초안 생성</button>
+
+  </div>
+
+  <!-- ── RIGHT ── -->
+  <div class="panel-right">
+
+    <!-- 툴바 -->
+    <div class="out-toolbar">
+      <div class="status-dot" id="sdot"></div>
+      <div class="out-label" id="out-label">공문 미리보기</div>
+      <span class="tb-sep" id="tb-sep" style="display:none">|</span>
+      <button class="tb-btn" id="btn-edit" style="display:none" onclick="toggleEdit()">✏️ 직접편집</button>
+      <button class="tb-btn" id="btn-ai" style="display:none" onclick="toggleAi()">✦ AI 편집</button>
+      <button class="tb-btn ml-auto" id="btn-copy" style="display:none" onclick="copyDoc()">복사</button>
+      <button class="tb-btn g" id="btn-print" style="display:none" onclick="window.print()">인쇄 / PDF</button>
+    </div>
+
+    <!-- AI 편집 패널 -->
+    <div class="ai-panel" id="ai-panel">
+      <div class="ai-panel-title">AI 편집 — 섹션을 클릭해 선택하거나, 전체에 적용하세요</div>
+      <div class="ai-quick-row">
+        <button class="ai-q-btn" onclick="aiEdit('법령 근거를 구체적인 조항까지 보강해줘')">법령 근거 보강</button>
+        <button class="ai-q-btn" onclick="aiEdit('표현을 더 단호하고 명확하게 바꿔줘')">표현 더 단호하게</button>
+        <button class="ai-q-btn" onclick="aiEdit('불필요한 내용을 제거하고 간결하게 줄여줘')">간결하게 줄이기</button>
+        <button class="ai-q-btn" onclick="aiEdit('협력적이고 유연한 톤으로 다시 써줘')">톤 유연하게</button>
+        <button class="ai-q-btn" onclick="aiEdit('티켓베이 정책 기준을 더 명확히 강조해줘')">정책 기준 강조</button>
+        <button class="ai-q-btn" onclick="aiEdit('소비자 과실이나 귀책 부분을 명확히 짚어줘')">소비자 귀책 명시</button>
+      </div>
+      <div class="ai-input-row">
+        <input class="ai-txt" id="ai-txt" placeholder="직접 지시 예) 결론 단락을 더 강하게, 3문장으로" onkeydown="if(event.key==='Enter')aiEdit(this.value)">
+        <button class="ai-go" id="ai-go" onclick="aiEdit(document.getElementById('ai-txt').value)">적용</button>
+      </div>
+      <div class="ai-note">※ 섹션 클릭 후 선택 → 해당 섹션만 수정 / 선택 없으면 전체 수정</div>
+    </div>
+
+    <!-- 공문 출력 -->
+    <div class="out-body" id="out-body">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">📄</div>
+        <div class="empty-txt">좌측 정보를 입력하고 공문을 생성하세요</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  ★ API KEY 고정 설정
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const API_KEY = 'YOUR_API_KEY_HERE'; // ← 여기에 API 키 입력
+
+// ── 유틸 ──
+const $ = id => document.getElementById(id);
+function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function setStatus(cls,txt){
+  $('sdot').className='status-dot'+(cls?' '+cls:'');
+  $('out-label').textContent=txt;
+}
+function updateTime(){
+  const n=new Date();
+  $('now-time').textContent=
+    n.toLocaleDateString('ko-KR')+' '+
+    n.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+}
+updateTime(); setInterval(updateTime,30000);
+$('received-date').value=new Date().toISOString().slice(0,10);
+
+const AGENCY={
+  kca:'한국소비자원',
+  ftc:'공정거래위원회',
+  both:'한국소비자원 · 공정거래위원회'
+};
+
+// ── 상태 ──
+let _meta={};
+let _editOn=false;
+let _selSec=null;
+
+// ── API 호출 ──
+function toggleKey(){const i=$('api-key-input');i.type=i.type==='password'?'text':'password';}
+
+async function callClaude(system, user){
+  const inputKey = $('api-key-input')?.value?.trim();
+  const key = (inputKey && inputKey.length > 10) ? inputKey : API_KEY.trim();
+  if(!key || key==='YOUR_API_KEY_HERE'){
+    throw new Error('API 키를 입력해 주세요.');
+  }
+  const r = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key': key,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body: JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1000,
+      system,
+      messages:[{role:'user',content:user}]
+    })
+  });
+  const d = await r.json();
+  if(d.error) throw new Error(d.error.message);
+  return d.content?.map(b=>b.text||'').join('')||'';
+}
+
+// ── 공문 생성 ──
+async function generateLetter(){
+  const cs    = $('cs-history').value.trim();
+  const mail  = $('agency-mail').value.trim();
+  if(!cs && !mail){ alert('상담 내용 또는 수신 공문 내용을 입력해 주세요.'); return; }
+
+  const btn=$('btn-gen');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>공문 생성 중...';
+  setStatus('loading','공문 생성 중...');
+  hideTools(); $('empty-state')?.remove();
+
+  const ag      = $('agency').value;
+  const cn      = $('case-number').value.trim();
+  const rd      = $('received-date').value;
+  const sName   = $('sender-name').value.trim() || '김미진';
+  const sTeam   = $('sender-team').value.trim() || '고객지원 SX팀';
+  const sEmail  = $('sender-email').value.trim() || 'cs@ticketbay.co.kr';
+  const today   = new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
+  const refDate = rd ? new Date(rd).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'}) : '미기재';
+
+  _meta = { ag, cn, today, refDate, sName, sTeam, sEmail };
+
+  const sys = `당신은 주식회사 팀플러스(티켓베이) 고객지원 SX팀 담당자입니다.
+소비자원·공정위 분쟁 사건에 대한 공식 회신 공문을 작성합니다.
+
+【적용 기준 우선순위 — 반드시 준수】
+① 티켓베이 서비스 이용약관 및 내부 정책 (최우선)
+② 전자상거래 등에서의 소비자보호에 관한 법률
+③ 소비자기본법
+④ 공정거래법 및 관련 고시·지침
+
+【공문 구조 — 정확히 4개 섹션】
+■ 1. 사건 개요
+■ 2. 당사 입장 및 사실관계
+■ 3. 관련 법령 및 정책 근거
+■ 4. 결론 및 요청사항
+
+규칙: 격식체(합니다/바랍니다), 사실 중심, 단호하나 협력적 톤, 공문 본문만 출력(설명 없이)`;
+
+  const usr = `다음 정보로 ${AGENCY[ag]}에 보낼 회신 공문을 작성하세요.
+
+수신: ${AGENCY[ag]}
+사건번호: ${cn||'추후 기재'}
+민원 접수일: ${refDate}
+작성일: ${today}
+
+[CS 상담 이력]
+${cs||'(없음)'}
+
+[수신 공문 내용]
+${mail||'(없음)'}
+
+■ 기호로 4개 섹션 구분하여 공문 본문만 출력하세요.`;
+
+  try{
+    const txt = await callClaude(sys, usr);
+    renderDoc(txt);
+    setStatus('ready','공문 초안 완료');
+    showTools();
+  } catch(err){
+    $('out-body').innerHTML=`<div style="color:#dc2626;padding:24px;font-family:var(--mono);font-size:12px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca;">오류: ${err.message}</div>`;
+    setStatus('','오류 발생');
+  } finally{
+    btn.disabled=false; btn.textContent='공문 재생성';
+  }
+}
+
+// ── 공문 렌더링 ──
+function renderDoc(raw){
+  window._raw=raw; _selSec=null; _editOn=false;
+
+  const secs=[]; let cur=null;
+  raw.split('\n').forEach(line=>{
+    if(/^■/.test(line.trim())){
+      if(cur) secs.push(cur);
+      cur={title:line.trim(), body:[]};
+    } else if(cur){
+      if(line.trim()) cur.body.push(line.trim());
+    }
+  });
+  if(cur) secs.push(cur);
+
+  const secsHTML = secs.map((s,i)=>{
+    const sid='s'+i;
+    const bodyHTML = s.body.map(l=>
+      `<div class="doc-para"><span>${esc(l)}</span><button class="p-del" onclick="delPara(this)" title="문장 삭제">✕</button></div>`
+    ).join('');
+    return `
+    <div class="doc-sec" id="${sid}" onclick="selSec('${sid}')">
+      <div class="sec-ctrl">
+        <button class="s-btn" onclick="event.stopPropagation();aiSec('${sid}')">✦ AI</button>
+        <button class="s-btn del" onclick="event.stopPropagation();delSec('${sid}')">✕ 삭제</button>
+      </div>
+      <div class="sec-head" id="${sid}-h" contenteditable="false">${esc(s.title)}</div>
+      <div class="sec-body" id="${sid}-b" contenteditable="false">${bodyHTML}</div>
+      <div class="ai-ov" id="${sid}-ov"><div class="ai-spin"></div>AI 수정 중...</div>
+    </div>`;
+  }).join('');
+
+  const m = _meta;
+  $('out-body').innerHTML=`
+    <div class="doc" id="doc">
+      <div class="doc-head-org">
+        <div class="doc-org-name">주식회사 팀플러스 (TicketBay)</div>
+        <div class="doc-org-sub">고객지원 SX팀 · CX &amp; CS Operations</div>
+      </div>
+      <div class="doc-title">소비자 분쟁 사건 회신</div>
+      <table class="doc-meta">
+        <tr><td>수신</td><td>${AGENCY[m.ag]}</td></tr>
+        <tr><td>발신</td><td>주식회사 팀플러스 (티켓베이) ${esc(m.sTeam)}</td></tr>
+        ${m.cn?`<tr><td>사건번호</td><td>${esc(m.cn)}</td></tr>`:''}
+        <tr><td>민원접수일</td><td>${m.refDate}</td></tr>
+        <tr><td>회신일자</td><td>${m.today}</td></tr>
+      </table>
+      <div id="doc-secs">${secsHTML}</div>
+      <div class="doc-footer">
+        <div class="f-org">주식회사 팀플러스 (TicketBay)</div>
+        <div class="f-det">${esc(m.sTeam)}</div>
+        <div class="f-det">${esc(m.sEmail)}</div>
+        <div class="f-sign">담당자: ${esc(m.sName)} (${esc(m.sTeam)})</div>
+      </div>
+      <div class="doc-stamp">팀플러스<br>고객지원</div>
+    </div>
+    <div class="edit-hint" id="edit-hint">✏️ 클릭한 섹션을 바로 수정 · 문장 위 ✕로 개별 삭제</div>`;
+
+  updateEditUI();
+}
+
+// ── 직접편집 ──
+function toggleEdit(){
+  _editOn=!_editOn;
+  updateEditUI();
+}
+function updateEditUI(){
+  const btn=$('btn-edit'), hint=$('edit-hint');
+  document.querySelectorAll('.sec-head').forEach(el=>el.contentEditable=_editOn?'true':'false');
+  document.querySelectorAll('.sec-body').forEach(el=>el.contentEditable=_editOn?'true':'false');
+  if(btn){ btn.textContent=_editOn?'✏️ 편집 ON':'✏️ 직접편집'; btn.classList.toggle('active',_editOn); }
+  if(hint) hint.style.display=_editOn?'block':'none';
+}
+
+// ── 섹션 선택 ──
+function selSec(sid){
+  if(_selSec){ const p=$(_selSec); if(p) p.classList.remove('selected'); }
+  _selSec=sid;
+  const el=$(sid); if(el) el.classList.add('selected');
+}
+
+// ── 삭제 ──
+function delSec(sid){
+  if(!confirm('이 섹션을 삭제하시겠습니까?')) return;
+  $(sid)?.remove();
+  if(_selSec===sid) _selSec=null;
+}
+function delPara(btn){ btn.closest('.doc-para')?.remove(); }
+
+// ── AI 패널 ──
+function toggleAi(){
+  const p=$('ai-panel');
+  p.classList.toggle('on');
+  $('btn-ai').classList.toggle('active', p.classList.contains('on'));
+}
+function aiSec(sid){
+  selSec(sid);
+  $('ai-panel').classList.add('on');
+  $('btn-ai').classList.add('active');
+  $('ai-txt').focus();
+}
+
+// ── AI 편집 적용 ──
+async function aiEdit(instr){
+  if(!instr||!instr.trim()){ alert('수정 지시를 입력해 주세요.'); return; }
+  const go=$('ai-go');
+  go.disabled=true; go.textContent='처리 중...';
+
+  let targetEl=null, curText='', isSec=false;
+  if(_selSec){
+    targetEl=$(_selSec);
+    if(targetEl){ curText=targetEl.innerText; isSec=true; }
+  }
+  if(!isSec){
+    const d=$('doc-secs'); if(d) curText=d.innerText;
+  }
+
+  if(isSec && targetEl){ const ov=$(_selSec+'-ov'); if(ov) ov.classList.add('show'); }
+
+  const sys=`티켓베이 공문 편집 전문가입니다.
+사용자 지시에 따라 공문 텍스트를 수정합니다.
+- ■ 섹션 구분 형식 유지
+- 격식체 유지
+- 수정된 텍스트만 출력 (설명 없이)
+- 우선순위: 티켓베이 약관 → 전자상거래법 → 소비자기본법 → 공정거래법`;
+
+  const usr=`[수정 지시]\n${instr}\n\n[현재 텍스트]\n${curText}\n\n수정 결과만 출력하세요.`;
+
+  try{
+    const newTxt=await callClaude(sys, usr);
+    if(isSec && targetEl){
+      const lines=newTxt.split('\n').filter(l=>l.trim());
+      const hEl=$(_selSec+'-h'), bEl=$(_selSec+'-b');
+      const headLine=lines.find(l=>/^■/.test(l.trim()));
+      const bodyLines=lines.filter(l=>!/^■/.test(l.trim()));
+      if(hEl && headLine) hEl.innerText=headLine;
+      if(bEl) bEl.innerHTML=bodyLines.map(l=>
+        `<div class="doc-para"><span>${esc(l)}</span><button class="p-del" onclick="delPara(this)" title="문장 삭제">✕</button></div>`
+      ).join('');
+    } else {
+      renderDoc(newTxt); showTools();
+    }
+    $('ai-txt').value='';
+  } catch(err){
+    alert('AI 편집 오류: '+err.message);
+  } finally{
+    if(isSec && targetEl){ const ov=$(_selSec+'-ov'); if(ov) ov.classList.remove('show'); }
+    go.disabled=false; go.textContent='적용';
+  }
+}
+
+// ── 복사 ──
+function copyDoc(){
+  const d=$('doc-secs'), f=document.querySelector('.doc-footer');
+  const t=(d?d.innerText:'')+(f?'\n\n'+f.innerText:'');
+  navigator.clipboard.writeText(t.trim()).then(()=>{
+    const b=$('btn-copy'), o=b.textContent;
+    b.textContent='복사 완료 ✓'; setTimeout(()=>b.textContent=o, 1800);
+  });
+}
+
+// ── 툴 표시/숨김 ──
+function showTools(){ ['btn-copy','btn-print','btn-edit','btn-ai','tb-sep'].forEach(id=>{ const e=$(id); if(e) e.style.display=''; }); }
+function hideTools(){ ['btn-copy','btn-print','btn-edit','btn-ai','tb-sep'].forEach(id=>{ const e=$(id); if(e) e.style.display='none'; }); }
+</script>
+</body>
+</html>

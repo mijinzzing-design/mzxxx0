@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>채널톡 상담 키워드 분석</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap');
+  :root {
+    --bg:#0a0c10;--bg2:#111419;--bg3:#181c24;--bg4:#1c2130;
+    --border:#1e2430;--border2:#252d3d;
+    --text:#c8d0e0;--text2:#6b7a96;--text3:#3d4a5e;
+    --accent:#3b82f6;--accent2:#1d4ed8;--accent-dim:rgba(59,130,246,.12);
+    --green:#10b981;--green-dim:rgba(16,185,129,.08);
+    --amber:#f59e0b;--amber-dim:rgba(245,158,11,.08);
+    --red:#ef4444;--red-dim:rgba(239,68,68,.08);
+    --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans KR',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;min-height:100vh;}
+
+  .hd{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+  .logo{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;background:var(--accent-dim);border:1px solid rgba(59,130,246,.2);padding:3px 9px;border-radius:3px;}
+  .htitle{font-size:13px;font-weight:500;margin-left:10px;}
+  #spill{font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:20px;border:1px solid var(--border2);color:var(--text2);background:var(--bg3);transition:all .3s;}
+  #spill.ok{border-color:rgba(16,185,129,.3);color:var(--green);background:var(--green-dim);}
+  #spill.running{border-color:rgba(59,130,246,.3);color:var(--accent);background:var(--accent-dim);animation:pulse 1.4s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+
+  /* api bar */
+  .api-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:7px 22px;display:flex;align-items:center;gap:10px;}
+  .api-label{font-family:var(--mono);font-size:10px;color:var(--text2);white-space:nowrap;}
+  .api-inp{background:var(--bg3);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;padding:5px 10px;outline:none;width:360px;}
+  .api-inp:focus{border-color:var(--accent);}
+  .api-hint{font-size:11px;color:var(--text3);}
+
+  .main{padding:18px 22px;max-width:1440px;margin:0 auto;}
+
+  /* upload */
+  .upzone{border:1px dashed var(--border2);border-radius:6px;background:var(--bg2);padding:28px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px;}
+  .upzone:hover,.upzone.drag{border-color:var(--accent);background:rgba(59,130,246,.04);}
+  .upzone input{display:none;}
+  .up-btn{margin-top:10px;display:inline-block;background:var(--accent2);color:#fff;border:none;padding:6px 16px;border-radius:4px;font-size:12px;font-family:var(--sans);cursor:pointer;font-weight:500;}
+  .up-btn:hover{background:var(--accent);}
+  .up-icon{font-size:22px;opacity:.35;margin-bottom:6px;}
+  .up-t{font-size:13px;font-weight:500;margin-bottom:2px;}
+  .up-s{font-size:11px;color:var(--text2);}
+
+  /* section */
+  .section{background:var(--bg2);border:1px solid var(--border);border-radius:6px;margin-bottom:14px;overflow:hidden;}
+  .sec-hd{padding:9px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
+  .sec-title{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;}
+  .sec-sub{font-family:var(--mono);font-size:10px;color:var(--text3);}
+  .sec-body{padding:14px 16px;}
+
+  .cprow{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;}
+  .fl{display:flex;flex-direction:column;gap:4px;}
+  .fl label{font-size:11px;color:var(--text2);}
+  select.cs{background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:var(--sans);font-size:12px;padding:6px 9px;border-radius:4px;outline:none;min-width:170px;}
+  select.cs:focus{border-color:var(--accent);}
+  .rmeta{font-family:var(--mono);font-size:10px;color:var(--text3);align-self:center;}
+  .run-btn{background:var(--accent);color:#fff;border:none;padding:7px 22px;border-radius:4px;font-size:12px;font-family:var(--sans);cursor:pointer;font-weight:600;margin-left:auto;transition:background .2s;white-space:nowrap;}
+  .run-btn:hover{background:#2563eb;}
+  .run-btn:disabled{background:var(--bg3);color:var(--text3);cursor:not-allowed;}
+
+  /* category editor */
+  .cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;margin-bottom:12px;}
+  .cat-card{background:var(--bg3);border:1px solid var(--border2);border-radius:5px;padding:10px 12px;}
+  .cat-card-hd{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+  .cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .cat-name-inp{background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--text);font-family:var(--sans);font-size:12px;font-weight:600;flex:1;outline:none;padding:2px 0;}
+  .cat-name-inp:focus{border-bottom-color:var(--accent);}
+  .cat-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:0 2px;}
+  .cat-del:hover{color:var(--red);}
+  .cat-desc-inp{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text2);font-family:var(--sans);font-size:11px;padding:5px 8px;outline:none;resize:none;line-height:1.6;}
+  .cat-desc-inp:focus{border-color:var(--accent);}
+  .cat-hint{font-size:10px;color:var(--text3);margin-top:3px;}
+  .add-cat-btn{background:var(--bg3);border:1px dashed var(--border2);color:var(--text2);font-size:12px;padding:6px 14px;border-radius:4px;cursor:pointer;font-family:var(--sans);}
+  .add-cat-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* progress */
+  .prog-wrap{display:none;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:14px;}
+  .prog-wrap.show{display:block;}
+  .prog-label{font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:7px;display:flex;justify-content:space-between;}
+  .prog-track{background:var(--bg3);border-radius:3px;height:4px;overflow:hidden;}
+  .prog-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .4s ease;width:0%;}
+  .prog-log{margin-top:7px;font-family:var(--mono);font-size:10px;color:var(--text3);}
+  .cost-est{font-family:var(--mono);font-size:10px;color:var(--green);margin-top:5px;}
+
+  /* overview */
+  .ov{display:none;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+  .ov.show{display:grid;}
+  .ovc{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 16px;}
+  .ovl{font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;}
+  .ovv{font-size:22px;font-weight:600;font-family:var(--mono);line-height:1;}
+  .ovs{font-size:11px;color:var(--text3);margin-top:3px;}
+
+  /* results */
+  .res-wrap{display:none;grid-template-columns:1fr 380px;gap:14px;}
+  .res-wrap.show{display:grid;}
+
+  .rtable{width:100%;border-collapse:collapse;}
+  .rtable thead tr{border-bottom:1px solid var(--border2);}
+  .rtable th{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;text-align:left;font-weight:500;}
+  .rtable tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+  .rtable tbody tr:hover{background:var(--bg3);}
+  .rtable tbody tr.active{background:var(--accent-dim);}
+  .rtable td{padding:10px 12px;vertical-align:top;}
+  .rank-cell{font-family:var(--mono);font-size:13px;font-weight:600;width:40px;color:var(--text3);}
+  .rank-cell.top{color:var(--amber);}
+  .kw-cell{font-weight:600;font-size:14px;}
+  .issues-cell{font-size:11px;color:var(--text2);line-height:1.7;max-width:280px;}
+  .issue-tag{display:inline-block;background:var(--bg4);border:1px solid var(--border2);border-radius:3px;font-size:10px;padding:1px 6px;margin:1px 2px 1px 0;color:var(--text2);}
+  .pct-cell{font-family:var(--mono);font-size:15px;font-weight:600;white-space:nowrap;text-align:right;}
+  .cnt-cell{font-family:var(--mono);font-size:10px;color:var(--text3);white-space:nowrap;text-align:right;}
+  .bar-wrap{margin-top:4px;height:2px;background:var(--bg3);border-radius:1px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:1px;transition:width .5s ease;}
+  .cat-badge{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle;}
+
+  .detail-panel{background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden;display:flex;flex-direction:column;max-height:700px;}
+  .dp-hd{padding:9px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+  .dp-name{font-size:16px;font-weight:600;margin-bottom:2px;}
+  .dp-meta{font-family:var(--mono);font-size:10px;color:var(--text2);}
+  .dp-body{overflow-y:auto;flex:1;padding:12px 14px;}
+  .dp-body::-webkit-scrollbar{width:3px;}
+  .dp-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+  .dp-label{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+  .sample-item{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:9px 12px 9px 22px;margin-bottom:7px;font-size:12px;line-height:1.7;color:var(--text);position:relative;}
+  .sample-item::before{content:'"';position:absolute;top:5px;left:8px;font-size:16px;color:var(--text3);font-family:Georgia,serif;line-height:1;}
+  .sample-idx{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:3px;}
+  .empty-dp{display:flex;align-items:center;justify-content:center;height:200px;color:var(--text3);font-size:12px;font-family:var(--mono);}
+
+  .errbox{display:none;background:var(--red-dim);border:1px solid rgba(239,68,68,.2);border-radius:6px;padding:10px 14px;margin-bottom:12px;font-family:var(--mono);font-size:11px;color:var(--red);}
+  .errbox.show{display:block;}
+
+  ::-webkit-scrollbar{width:4px;height:4px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <div style="display:flex;align-items:center;">
+    <span class="logo">TicketBay CX</span>
+    <span class="htitle">채널톡 상담 맥락 분석</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span style="font-family:var(--mono);font-size:10px;color:var(--text3);" id="filemeta">파일 없음</span>
+    <span id="spill">대기중</span>
+  </div>
+</div>
+
+<!-- API Key -->
+<div class="api-bar">
+  <span class="api-label">ANTHROPIC API KEY</span>
+  <input type="password" class="api-inp" id="apiKey" placeholder="sk-ant-..." autocomplete="off">
+  <span class="api-hint">· 입력하면 자동 저장 · 로컬에서만 사용</span>
+</div>
+
+<div class="main">
+  <div class="errbox" id="errbox"></div>
+
+  <!-- Upload -->
+  <div class="upzone" id="upzone">
+    <div class="up-icon">📂</div>
+    <div class="up-t">채널톡 상담 내보내기 파일 업로드</div>
+    <div class="up-s">Excel (.xlsx / .xls) · CSV — 드래그 앤 드롭 가능</div>
+    <button class="up-btn" onclick="document.getElementById('fi').click()">파일 선택</button>
+    <input type="file" id="fi" accept=".xlsx,.xls,.csv">
+  </div>
+
+  <!-- 분석 설정 -->
+  <div class="section">
+    <div class="sec-hd" onclick="toggleSec('settingBody','sa')">
+      <span class="sec-title">분석 설정</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3);" id="sa">▲</span>
+    </div>
+    <div id="settingBody" class="sec-body">
+      <div class="cprow">
+        <div class="fl">
+          <label>고객 문의 내용 컬럼</label>
+          <select class="cs" id="colSel"><option value="">— 파일 업로드 후 선택 —</option></select>
+        </div>
+        <div class="fl">
+          <label>날짜 컬럼 (선택)</label>
+          <select class="cs" id="dateSel"><option value="">— 없음 —</option></select>
+        </div>
+        <div class="fl">
+          <label>최대 분석 건수</label>
+          <select class="cs" id="limitSel" style="min-width:110px;">
+            <option value="100">100건</option>
+            <option value="300" selected>300건</option>
+            <option value="500">500건</option>
+            <option value="1000">1,000건</option>
+            <option value="0">전체</option>
+          </select>
+        </div>
+        <div class="fl">
+          <label>배치 크기</label>
+          <select class="cs" id="batchSel" style="min-width:110px;">
+            <option value="30" selected>30건/배치</option>
+            <option value="50">50건/배치</option>
+          </select>
+        </div>
+        <span class="rmeta" id="rmeta"></span>
+        <button class="run-btn" id="runBtn" onclick="runAnalysis()">분석 시작 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 카테고리 정의 -->
+  <div class="section">
+    <div class="sec-hd" onclick="toggleSec('catBody','ca')">
+      <span class="sec-title">대분류 카테고리 정의</span>
+      <span class="sec-sub">이름과 설명을 수정하면 AI가 맥락 기반으로 분류</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3);" id="ca">▼</span>
+    </div>
+    <div id="catBody" class="sec-body" style="display:none;">
+      <div class="cat-grid" id="catGrid"></div>
+      <button class="add-cat-btn" onclick="addCat()">+ 카테고리 추가</button>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="prog-wrap" id="progWrap">
+    <div class="prog-label">
+      <span id="progLabel">준비중...</span>
+      <span id="progPct">0%</span>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    <div class="prog-log" id="progLog"></div>
+    <div class="cost-est" id="costEst"></div>
+  </div>
+
+  <!-- Overview -->
+  <div class="ov" id="ov">
+    <div class="ovc"><div class="ovl">총 분석 건수</div><div class="ovv" id="ov1">—</div><div class="ovs" id="ov1s">—</div></div>
+    <div class="ovc"><div class="ovl">분류 성공</div><div class="ovv" id="ov2">—</div><div class="ovs" id="ov2s">—</div></div>
+    <div class="ovc"><div class="ovl">1위 카테고리</div><div class="ovv" id="ov3" style="font-size:15px;">—</div><div class="ovs" id="ov3s">—</div></div>
+    <div class="ovc"><div class="ovl">기타/미분류</div><div class="ovv" id="ov4">—</div><div class="ovs" id="ov4s">—</div></div>
+  </div>
+
+  <!-- Results -->
+  <div class="res-wrap" id="resWrap">
+    <div class="section" style="margin-bottom:0;">
+      <div style="padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;">상담 대분류 키워드 (빈도순)</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text3);" id="resCount"></span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="rtable">
+          <thead>
+            <tr>
+              <th>순위</th>
+              <th>대분류 키워드</th>
+              <th>주요 인입 내용 (Key Issues)</th>
+              <th style="text-align:right;">비중</th>
+              <th style="text-align:right;">건수</th>
+            </tr>
+          </thead>
+          <tbody id="rtbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="detail-panel">
+      <div class="dp-hd">
+        <div class="dp-name" id="dpname">원문 샘플</div>
+        <div class="dp-meta" id="dpmeta">카테고리를 클릭하세요</div>
+      </div>
+      <div class="dp-body" id="dpbody">
+        <div class="empty-dp">← 카테고리를 선택하면 원문이 표시됩니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 카테고리 기본값 ──────────────────────────────────
+const COLORS=['#ef4444','#10b981','#3b82f6','#f59e0b','#a78bfa','#22d3ee','#f97316','#84cc16','#ec4899','#06b6d4'];
+
+let categories=[
+  {name:'취소/페널티',   color:'#ef4444', desc:'구매·판매 취소 요청, 취소 수수료(페널티) 문의, 취소 가능 여부, 취소 후 처리 문의'},
+  {name:'정산/입금',     color:'#10b981', desc:'판매 대금 정산 일정, 입금 지연, 출금 신청 오류, 정산 기준 문의'},
+  {name:'배송/전달',     color:'#3b82f6', desc:'티켓 배송 상태 확인, PIN·모바일·전자티켓 전달 방법, 수령 못한 경우, QR코드 문의'},
+  {name:'결제/환불',     color:'#f59e0b', desc:'결제 오류·실패, 결제 수단 변경, 카드 취소, 환불 금액·일정 확인'},
+  {name:'티켓 진위/사기',color:'#a78bfa', desc:'티켓 가짜 여부 의심, 이중판매 피해, 판매자 잠수, 사기 피해 신고'},
+  {name:'계정/인증',     color:'#22d3ee', desc:'로그인 오류, 계정 정지·탈퇴, 본인인증 문제, 비밀번호 재설정'},
+  {name:'가격/흥정',     color:'#f97316', desc:'티켓 가격 협의 요청, 시세 문의, 할인 여부, 가격 조정 요청'},
+  {name:'이용방법/기타', color:'#84cc16', desc:'서비스 이용 방법, 플랫폼 사용법, 위 카테고리에 해당하지 않는 문의'},
+];
+
+// ── API Key 저장 ──────────────────────────────────────
+const apiKeyInp = document.getElementById('apiKey');
+try { apiKeyInp.value = localStorage.getItem('tbcx_api_key') || ''; } catch(e){}
+apiKeyInp.addEventListener('input', () => {
+  try { localStorage.setItem('tbcx_api_key', apiKeyInp.value.trim()); } catch(e){}
+});
+
+// ── 카테고리 UI ──────────────────────────────────────
+function renderCatGrid(){
+  const grid=document.getElementById('catGrid');
+  grid.innerHTML='';
+  categories.forEach((cat,i)=>{
+    const card=document.createElement('div');
+    card.className='cat-card';
+    card.innerHTML=`
+      <div class="cat-card-hd">
+        <div class="cat-dot" style="background:${cat.color}"></div>
+        <input class="cat-name-inp" value="${esc(cat.name)}" onchange="categories[${i}].name=this.value" placeholder="카테고리명">
+        <button class="cat-del" onclick="delCat(${i})">✕</button>
+      </div>
+      <textarea class="cat-desc-inp" rows="3" onchange="categories[${i}].desc=this.value"
+        placeholder="이 카테고리에 해당하는 상담 유형을 설명하세요 (AI 분류 기준으로 사용)">${esc(cat.desc)}</textarea>
+      <div class="cat-hint">AI가 이 설명을 바탕으로 맥락 판단</div>`;
+    grid.appendChild(card);
+  });
+}
+function addCat(){
+  categories.push({name:'새 카테고리',color:COLORS[categories.length%COLORS.length],desc:''});
+  renderCatGrid();
+  document.getElementById('catBody').style.display='block';
+  document.getElementById('ca').textContent='▲';
+}
+function delCat(i){categories.splice(i,1);renderCatGrid();}
+function toggleSec(bid,aid){
+  const b=document.getElementById(bid),a=document.getElementById(aid);
+  const h=b.style.display==='none';
+  b.style.display=h?'block':'none';
+  a.textContent=h?'▲':'▼';
+}
+renderCatGrid();
+
+// ── 파일 처리 ─────────────────────────────────────────
+let rows=[], cols=[];
+const upzone=document.getElementById('upzone');
+upzone.addEventListener('dragover',e=>{e.preventDefault();upzone.classList.add('drag');});
+upzone.addEventListener('dragleave',()=>upzone.classList.remove('drag'));
+upzone.addEventListener('drop',e=>{e.preventDefault();upzone.classList.remove('drag');if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0]);});
+document.getElementById('fi').addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0]);});
+upzone.addEventListener('click',e=>{
+  if(['up-icon','up-t','up-s'].some(c=>e.target.classList.contains(c))||e.target===upzone)
+    document.getElementById('fi').click();
+});
+
+function loadFile(file){
+  err('');
+  document.getElementById('filemeta').textContent=file.name+' ('+fmtSz(file.size)+')';
+  const ext=file.name.split('.').pop().toLowerCase();
+  const reader=new FileReader();
+  if(ext==='csv'){reader.onload=e=>parseCSV(e.target.result);reader.readAsText(file,'UTF-8');}
+  else{reader.onload=e=>parseXLSX(e.target.result);reader.readAsArrayBuffer(file);}
+}
+function fmtSz(b){if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(1)+'KB';return(b/1048576).toFixed(1)+'MB';}
+
+function parseXLSX(buf){
+  try{
+    const wb=XLSX.read(buf,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const json=XLSX.utils.sheet_to_json(ws,{defval:''});
+    if(!json.length){err('데이터 없음');return;}
+    rows=json;cols=Object.keys(json[0]);showPicker();
+  }catch(e){err('파싱 실패: '+e.message);}
+}
+function parseCSV(text){
+  try{
+    const lines=text.split('\n').filter(l=>l.trim());
+    const headers=splitCSV(lines[0]).map(h=>h.replace(/"/g,'').trim());
+    rows=lines.slice(1).map(line=>{
+      const v=splitCSV(line);const o={};
+      headers.forEach((h,i)=>o[h]=(v[i]||'').replace(/^"|"$/g,'').trim());
+      return o;
+    });
+    cols=headers;showPicker();
+  }catch(e){err('CSV 파싱 실패: '+e.message);}
+}
+function splitCSV(line){
+  const res=[];let cur='',q=false;
+  for(const ch of line){if(ch==='"')q=!q;else if(ch===','&&!q){res.push(cur);cur='';}else cur+=ch;}
+  res.push(cur);return res;
+}
+function showPicker(){
+  const cSel=document.getElementById('colSel'),dSel=document.getElementById('dateSel');
+  cSel.innerHTML='';dSel.innerHTML='<option value="">— 없음 —</option>';
+  cols.map(c=>{
+    const s=rows.slice(0,80).map(r=>String(r[c]||'')).filter(v=>v);
+    return{c,score:s.some(v=>/[가-힣]/.test(v))?s.reduce((a,b)=>a+b.length,0)/(s.length||1):0};
+  }).sort((a,b)=>b.score-a.score).forEach(({c})=>{
+    const o=document.createElement('option');o.value=c;o.textContent=c;cSel.appendChild(o);
+  });
+  cols.forEach(c=>{
+    const o=document.createElement('option');o.value=c;o.textContent=c;dSel.appendChild(o);
+    if(/날짜|일시|시간|date|time|created/i.test(c))dSel.value=c;
+  });
+  document.getElementById('rmeta').textContent=`총 ${rows.length.toLocaleString()}행`;
+}
+
+// ── 분석 메인 ────────────────────────────────────────
+let totalTokensIn=0, totalTokensOut=0;
+
+async function runAnalysis(){
+  const apiKey=document.getElementById('apiKey').value.trim();
+  if(!apiKey){err('API Key를 입력해주세요.');return;}
+  const contentCol=document.getElementById('colSel').value;
+  if(!contentCol){err('분석할 컬럼을 선택해주세요.');return;}
+  if(!rows.length){err('파일을 먼저 업로드해주세요.');return;}
+
+  err('');
+  totalTokensIn=0;totalTokensOut=0;
+
+  const dateCol=document.getElementById('dateSel').value;
+  const limitN=parseInt(document.getElementById('limitSel').value)||0;
+  const batchSize=parseInt(document.getElementById('batchSel').value);
+
+  // 데이터 수집
+  let dataset=rows.map((r,i)=>({id:i,text:String(r[contentCol]||'').trim()})).filter(d=>d.text.length>3);
+  const totalOrig=dataset.length;
+  if(limitN>0&&dataset.length>limitN){
+    const step=dataset.length/limitN;
+    dataset=Array.from({length:limitN},(_,i)=>dataset[Math.floor(i*step)]);
+  }
+  const total=dataset.length;
+
+  let period='전체';
+  if(dateCol){
+    const dates=rows.map(r=>String(r[dateCol]||'')).filter(v=>v.length>0);
+    if(dates.length)period=dates[0]+' ~ '+dates[dates.length-1];
+  }
+
+  // UI 초기화
+  document.getElementById('runBtn').disabled=true;
+  setStatus('running','분석중');
+  document.getElementById('progWrap').classList.add('show');
+  document.getElementById('ov').classList.remove('show');
+  document.getElementById('resWrap').classList.remove('show');
+
+  // 카테고리 빌드
+  const cats=categories.filter(c=>c.name.trim());
+  const catNames=cats.map(c=>c.name);
+
+  // 결과 저장소
+  const catMap={}; // catName -> {count, samples:[{text,summary}]}
+  cats.forEach(c=>{catMap[c.name]={count:0,samples:[],issues:{}};});
+  catMap['기타/미분류']={count:0,samples:[],issues:{},isUncat:true};
+
+  // 배치 처리
+  const batches=[];
+  for(let i=0;i<dataset.length;i+=batchSize) batches.push(dataset.slice(i,i+batchSize));
+
+  for(let bi=0;bi<batches.length;bi++){
+    const pct=Math.round((bi/batches.length)*90)+5;
+    setProgress(pct,`배치 분류 중 (${bi+1}/${batches.length})`,`${bi*batchSize+1}~${Math.min((bi+1)*batchSize,total)}건`);
+
+    const batch=batches[bi];
+    const result=await classifyBatch(apiKey,batch,cats);
+
+    if(result){
+      result.forEach(item=>{
+        const cat=catMap[item.cat]||catMap['기타/미분류'];
+        cat.count++;
+        // 원문 저장 (최대 15건) + 요약 이슈
+        if(cat.samples.length<15){
+          const orig=batch.find(b=>b.id===item.id);
+          if(orig) cat.samples.push({text:orig.text, issue:item.issue||''});
+        }
+        // 이슈 빈도 집계
+        if(item.issue){
+          cat.issues[item.issue]=(cat.issues[item.issue]||0)+1;
+        }
+      });
+    } else {
+      // API 실패 시 해당 배치 미분류 처리
+      batch.forEach(b=>{
+        catMap['기타/미분류'].count++;
+        if(catMap['기타/미분류'].samples.length<15)
+          catMap['기타/미분류'].samples.push({text:b.text,issue:''});
+      });
+    }
+
+    // 예상 비용 업데이트
+    const costKRW=((totalTokensIn/1000000*0.08)+(totalTokensOut/1000000*0.4))*1380;
+    document.getElementById('costEst').textContent=
+      `예상 비용: ₩${costKRW.toFixed(0)} (입력 ${totalTokensIn.toLocaleString()} / 출력 ${totalTokensOut.toLocaleString()} 토큰)`;
+  }
+
+  setProgress(98,'결과 정리중','');
+
+  // 상위 이슈 추출
+  Object.values(catMap).forEach(cat=>{
+    cat.topIssues=Object.entries(cat.issues).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k])=>k);
+  });
+
+  // 정렬
+  const sorted=Object.entries(catMap)
+    .map(([name,data])=>({name,color:cats.find(c=>c.name===name)?.color||'#3d4a5e',...data}))
+    .filter(c=>c.count>0)
+    .sort((a,b)=>{
+      if(a.isUncat) return 1;
+      if(b.isUncat) return -1;
+      return b.count-a.count;
+    });
+
+  const classified=sorted.filter(c=>!c.isUncat).reduce((a,c)=>a+c.count,0);
+  const unclassified=catMap['기타/미분류'].count;
+
+  renderOverview(total,totalOrig,period,sorted,classified,unclassified);
+  renderTable(sorted,total);
+
+  setProgress(100,'완료','');
+  setStatus('ok','완료');
+  document.getElementById('runBtn').disabled=false;
+  setTimeout(()=>document.getElementById('progWrap').classList.remove('show'),3000);
+}
+
+// ── Haiku 배치 분류 ──────────────────────────────────
+async function classifyBatch(apiKey, batch, cats){
+  const catList=cats.map((c,i)=>`${i+1}. ${c.name}: ${c.desc}`).join('\n');
+  const items=batch.map(b=>`[ID:${b.id}] ${b.text.slice(0,300)}`).join('\n---\n');
+
+  const prompt=`당신은 고객 상담 분류 전문가입니다.
+
+다음 카테고리 중 각 상담의 핵심 의도에 가장 맞는 것을 하나 선택하세요:
+${catList}
+
+분류 규칙:
+- 키워드가 없어도 전체 문장의 맥락과 의도로 판단
+- 여러 주제가 섞였으면 가장 핵심적인 것 하나 선택
+- 위 카테고리 중 해당 없으면 "기타/미분류"
+- issue는 이 상담의 핵심 문제를 10자 이내 한국어로 요약
+
+상담 목록:
+${items}
+
+JSON 배열만 출력 (설명 없음):
+[{"id":ID번호,"cat":"카테고리명","issue":"핵심문제요약"}]`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:1500,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||'API 오류 '+res.status);}
+    const data=await res.json();
+    totalTokensIn+=(data.usage?.input_tokens||0);
+    totalTokensOut+=(data.usage?.output_tokens||0);
+    const text=data.content?.map(b=>b.text||'').join('')||'';
+    const clean=text.replace(/```json|```/g,'').trim();
+    return JSON.parse(clean);
+  }catch(e){
+    console.error('배치 오류:',e);
+    return null;
+  }
+}
+
+// ── 렌더 ──────────────────────────────────────────────
+function renderOverview(total,totalOrig,period,sorted,classified,unclassified){
+  document.getElementById('ov1').textContent=total.toLocaleString();
+  document.getElementById('ov1s').textContent=period+(totalOrig!==total?` (원본 ${totalOrig.toLocaleString()}건 샘플)`:'');
+  document.getElementById('ov2').textContent=classified.toLocaleString();
+  document.getElementById('ov2s').textContent=((classified/total*100).toFixed(1))+'% 분류';
+  const top=sorted.find(c=>!c.isUncat);
+  if(top){
+    document.getElementById('ov3').textContent=top.name;
+    document.getElementById('ov3s').textContent=(top.count/total*100).toFixed(1)+'% · '+top.count.toLocaleString()+'건';
+  }
+  document.getElementById('ov4').textContent=unclassified.toLocaleString();
+  document.getElementById('ov4s').textContent=((unclassified/total*100).toFixed(1))+'%';
+  document.getElementById('ov').classList.add('show');
+}
+
+function renderTable(sorted,total){
+  const tbody=document.getElementById('rtbody');
+  tbody.innerHTML='';
+  document.getElementById('resCount').textContent=sorted.length+'개 카테고리';
+  const maxCount=sorted.filter(c=>!c.isUncat)[0]?.count||1;
+
+  let rank=0;
+  sorted.forEach(cat=>{
+    if(!cat.isUncat) rank++;
+    const pct=(cat.count/total*100).toFixed(1);
+    const barW=(cat.count/maxCount*100).toFixed(1);
+    const issuesHtml=(cat.topIssues||[]).map(k=>`<span class="issue-tag">${esc(k)}</span>`).join('');
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="rank-cell ${!cat.isUncat&&rank<=3?'top':''}">${cat.isUncat?'—':rank}</td>
+      <td class="kw-cell">
+        <span class="cat-badge" style="background:${cat.color}"></span>${esc(cat.name)}
+        <div class="bar-wrap"><div class="bar-fill" style="width:${cat.isUncat?0:barW}%;background:${cat.color}"></div></div>
+      </td>
+      <td class="issues-cell">${issuesHtml||'<span style="color:var(--text3)">—</span>'}</td>
+      <td class="pct-cell" style="color:${cat.isUncat?'var(--text3)':cat.color}">${pct}%</td>
+      <td class="cnt-cell">${cat.count.toLocaleString()}건</td>`;
+    tr.addEventListener('click',()=>{
+      document.querySelectorAll('.rtable tbody tr').forEach(r=>r.classList.remove('active'));
+      tr.classList.add('active');
+      showDetail(cat,total);
+    });
+    tbody.appendChild(tr);
+  });
+  document.getElementById('resWrap').classList.add('show');
+}
+
+function showDetail(cat,total){
+  document.getElementById('dpname').textContent=cat.name;
+  document.getElementById('dpmeta').textContent=`${(cat.count/total*100).toFixed(1)}% · ${cat.count.toLocaleString()}건`;
+  const body=document.getElementById('dpbody');
+  body.innerHTML=`<div class="dp-label">실제 고객 문의 원문 (${cat.samples.length}건 표시)</div>`;
+  if(!cat.samples.length){body.innerHTML+='<div class="empty-dp">원문 없음</div>';return;}
+  cat.samples.forEach((s,i)=>{
+    const div=document.createElement('div');
+    div.className='sample-item';
+    div.innerHTML=`
+      <div>${esc(s.text)}</div>
+      ${s.issue?`<div style="margin-top:5px;font-family:var(--mono);font-size:10px;color:var(--accent);">▸ ${esc(s.issue)}</div>`:''}
+      <div class="sample-idx">#${i+1}</div>`;
+    body.appendChild(div);
+  });
+}
+
+// ── 유틸 ──────────────────────────────────────────────
+function setStatus(type,text){
+  const s=document.getElementById('spill');
+  s.textContent=text;s.className=type;
+}
+function setProgress(pct,label,log){
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progLabel').textContent=label;
+  document.getElementById('progPct').textContent=pct+'%';
+  if(log)document.getElementById('progLog').textContent=log;
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function err(msg){const b=document.getElementById('errbox');if(msg){b.textContent='⚠ '+msg;b.classList.add('show');}else b.classList.remove('show');}
+</script>
+</body>
+</html>
