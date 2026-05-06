@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS·CX 운영 실적 포트폴리오 — 김미진</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg: #f7f7f5;
+  --card: #ffffff;
+  --ink: #111111;
+  --ink2: #3a3a3a;
+  --muted: #888;
+  --line: #e4e4e0;
+  --green: #1a7a4a;
+  --green-lt: #f0faf4;
+  --red: #b83030;
+  --red-lt: #fdf4f4;
+  --yellow: #8a6010;
+  --yellow-lt: #fdf8ee;
+  --blue: #1a5fa0;
+  --blue-lt: #f0f6ff;
+}
+body { background:var(--bg); color:var(--ink); font-family:'Noto Sans KR',sans-serif; font-size:14px; line-height:1.6; }
+
+/* ══ COVER ══ */
+.cover {
+  background: #0f1219;
+  min-height: 280px;
+  padding: 48px 60px 52px;
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.cover::before {
+  content:'';
+  position:absolute; right:-80px; top:-60px;
+  width:600px; height:500px;
+  background: radial-gradient(ellipse at center, rgba(56,140,255,0.18) 0%, rgba(80,60,200,0.08) 40%, transparent 70%);
+  pointer-events:none;
+}
+.cover-top { display:flex; justify-content:space-between; align-items:flex-start; position:relative; z-index:1; margin-bottom:36px; }
+.cover-bottom { position:relative; z-index:1; }
+.tb-mark { display:flex; align-items:center; gap:9px; }
+.tb-icon { width:32px; height:32px; background:white; border-radius:5px; display:flex; align-items:center; justify-content:center; }
+.tb-wordmark { font-family:'DM Mono',monospace; font-size:12px; font-weight:500; color:rgba(255,255,255,0.8); letter-spacing:2px; text-transform:uppercase; }
+.cover-badge { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:1.5px; color:rgba(255,255,255,0.28); text-transform:uppercase; border:1px solid rgba(255,255,255,0.1); padding:5px 12px; border-radius:999px; }
+.cover-eyebrow { display:flex; align-items:center; gap:12px; margin-bottom:18px; font-family:'DM Mono',monospace; font-size:11px; letter-spacing:4px; color:rgba(255,255,255,0.38); text-transform:uppercase; }
+.cover-eyebrow::before { content:''; width:32px; height:1px; background:rgba(255,255,255,0.35); flex-shrink:0; }
+.cover-title { font-size:clamp(32px,5.5vw,60px); font-weight:900; line-height:1.1; letter-spacing:-2px; color:#ffffff; margin-bottom:18px; word-break:keep-all; }
+.cover-sub { font-size:13px; color:rgba(255,255,255,0.32); font-weight:300; }
+
+/* ══ LAYOUT ══ */
+.body { max-width:980px; margin:0 auto; padding:52px 32px 80px; }
+.sec-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:14px; margin-top:52px; display:flex; align-items:center; gap:10px; }
+.sec-label::before { content:''; width:20px; height:1px; background:var(--line); }
+.sec-label:first-child { margin-top:0; }
+
+/* ══ KPI ══ */
+.kpi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+.kpi { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 16px; position:relative; overflow:hidden; }
+.kpi-top-bar { position:absolute; top:0; left:0; right:0; height:2px; background:var(--ink); }
+.kpi-top-bar.green { background:var(--green); }
+.kpi-top-bar.yellow { background:#c08000; }
+.kpi-top-bar.red { background:var(--red); }
+.kpi-top-bar.blue { background:var(--blue); }
+.kpi-lbl { font-size:10px; color:var(--muted); margin-bottom:8px; font-weight:500; letter-spacing:0.3px; }
+.kpi-num { font-size:22px; font-weight:700; letter-spacing:-0.5px; line-height:1; color:var(--ink); }
+.kpi-note { font-size:10px; color:var(--muted); margin-top:4px; }
+.kpi-delta { display:inline-flex; align-items:center; gap:3px; margin-top:10px; font-size:10px; font-family:'DM Mono',monospace; padding:2px 8px; border-radius:3px; font-weight:500; }
+.kpi-delta.up   { background:var(--green-lt); color:var(--green); }
+.kpi-delta.warn { background:var(--yellow-lt); color:var(--yellow); }
+.kpi-delta.bad  { background:var(--red-lt); color:var(--red); }
+.kpi-delta.neu  { background:#f3f3f3; color:var(--muted); }
+.kpi-delta.blue { background:var(--blue-lt); color:var(--blue); }
+
+/* ══ CHART CARDS ══ */
+.chart-full { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:28px 28px 20px; margin-bottom:14px; }
+.chart-full-title { font-size:14px; font-weight:700; color:var(--ink); margin-bottom:4px; }
+.chart-full-sub { font-size:11px; color:var(--muted); margin-bottom:24px; }
+.chart-full canvas { max-height:240px; }
+.chart-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.chart-box { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:24px; }
+.chart-title { font-size:13px; font-weight:700; margin-bottom:2px; }
+.chart-sub { font-size:11px; color:var(--muted); margin-bottom:20px; }
+.chart-box canvas { max-height:220px; }
+
+/* ══ 채널비중 카드 ══ */
+.channel-row { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:14px; }
+.ch-card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px 18px; }
+.ch-label { font-size:10px; color:var(--muted); font-family:'DM Mono',monospace; letter-spacing:1px; margin-bottom:8px; }
+.ch-big { font-size:28px; font-weight:900; letter-spacing:-1px; margin-bottom:4px; }
+.ch-big.green { color:var(--green); }
+.ch-big.blue { color:var(--blue); }
+.ch-big.yellow { color:var(--yellow); }
+.ch-sub { font-size:11px; color:var(--muted); }
+.ch-bar-wrap { height:5px; background:#eee; border-radius:3px; overflow:hidden; margin-top:12px; }
+.ch-bar-fill { height:100%; border-radius:3px; }
+.ch-bar-fill.green { background:var(--green); }
+.ch-bar-fill.blue { background:var(--blue); }
+.ch-bar-fill.yellow { background:#c08000; }
+
+/* ══ 문의 카테고리 테이블 ══ */
+.cat-table { width:100%; border-collapse:collapse; font-size:12px; }
+.cat-table th { text-align:left; padding:8px 12px; font-size:10px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; border-bottom:2px solid var(--line); }
+.cat-table td { padding:10px 12px; border-bottom:1px solid var(--line); }
+.cat-table tr:last-child td { border-bottom:none; }
+.cat-bar { display:flex; align-items:center; gap:8px; }
+.cat-bar-inner { height:6px; border-radius:3px; background:var(--ink); flex-shrink:0; }
+.cat-bar-inner.red { background:var(--red); }
+.cat-bar-inner.green { background:var(--green); }
+.cat-bar-inner.blue { background:var(--blue); }
+.cat-bar-inner.yellow { background:#c08000; }
+.cat-pct { font-family:'DM Mono',monospace; font-size:11px; font-weight:500; color:var(--ink2); }
+.cat-num { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); }
+
+/* ══ YoY 비교 ══ */
+.yoy-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.yoy-card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px 18px; }
+.yoy-card.highlight { border:2px solid var(--ink); }
+.yoy-month { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--muted); margin-bottom:12px; }
+.yoy-cols { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.yoy-col-label { font-size:10px; color:var(--muted); margin-bottom:4px; font-family:'DM Mono',monospace; }
+.yoy-col-num { font-size:18px; font-weight:700; letter-spacing:-0.5px; }
+.yoy-col-num.dim { color:var(--muted); font-size:14px; }
+.yoy-growth { font-family:'DM Mono',monospace; font-size:12px; font-weight:700; margin-top:4px; }
+.yoy-growth.up { color:var(--green); }
+.yoy-growth.down { color:var(--red); }
+
+/* ══ CONTEXT NOTE ══ */
+.ctx-note { background:#f3f3f1; border-radius:10px; padding:14px 18px; font-size:11px; color:var(--ink2); line-height:1.8; margin-top:10px; }
+.ctx-note strong { color:var(--ink); }
+
+/* ══ FOOTER ══ */
+.footer { background:var(--ink); padding:24px 60px; font-size:11px; color:rgba(255,255,255,0.3); font-family:'DM Mono',monospace; display:flex; justify-content:space-between; align-items:center; }
+
+@media(max-width:700px){
+  .cover{padding:36px 24px;}
+  .body{padding:36px 20px 60px;}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .chart-2,.yoy-row{grid-template-columns:1fr;}
+  .channel-row{grid-template-columns:1fr;}
+  .footer{padding:20px 24px;flex-direction:column;gap:6px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ COVER ══ -->
+<div class="cover">
+  <div class="cover-top">
+    <div class="tb-mark">
+      <div class="tb-icon">
+        <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
+          <rect x="1" y="5" width="20" height="12" rx="2" fill="#111"/>
+          <circle cx="1" cy="11" r="2.5" fill="#fff"/>
+          <circle cx="21" cy="11" r="2.5" fill="#fff"/>
+          <line x1="7.5" y1="5.5" x2="7.5" y2="16.5" stroke="#fff" stroke-width="0.8" stroke-dasharray="2 1.5"/>
+        </svg>
+      </div>
+      <div class="tb-wordmark">TICKETBAY CS</div>
+    </div>
+    <div class="cover-badge">팀플러스 · 티켓베이</div>
+  </div>
+  <div class="cover-bottom">
+    <div class="cover-eyebrow">CS · CX Operations Portfolio</div>
+    <div class="cover-title">콜센터 운영 실적<br>통계 포트폴리오</div>
+    <div class="cover-sub">CX&CS 운영 총괄 &nbsp;|&nbsp; 김미진 &nbsp;|&nbsp; 2026년 2월 ~ 5월 현재 &nbsp;|&nbsp; 티켓베이 C2C 티켓 거래 플랫폼</div>
+  </div>
+</div>
+
+<!-- ══ BODY ══ -->
+<div class="body">
+
+  <!-- ─ KPI ─ -->
+  <div class="sec-label">핵심 운영 지표 (누적 기준)</div>
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-top-bar blue"></div>
+      <div class="kpi-lbl">누적 총 문의 건수</div>
+      <div class="kpi-num">117,623</div>
+      <div class="kpi-note">2월~5월 초 누적</div>
+      <div class="kpi-delta blue">▲ 전년 동기 대비 운영 규모 확대</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-top-bar green"></div>
+      <div class="kpi-lbl">IB 평균 응답률</div>
+      <div class="kpi-num">98.9%</div>
+      <div class="kpi-note">4월 기준 최고 월 실적</div>
+      <div class="kpi-delta up">▲ IVR 도입 후 안정 유지</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-top-bar"></div>
+      <div class="kpi-lbl">월 최대 처리 건수</div>
+      <div class="kpi-num">53,075</div>
+      <div class="kpi-note">2026년 4월 (티켓 시즌)</div>
+      <div class="kpi-delta up">▲ +27.6% vs 전년 4월</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-top-bar yellow"></div>
+      <div class="kpi-lbl">월 평균 CPH</div>
+      <div class="kpi-num">5.57</div>
+      <div class="kpi-note">4월 기준 (시간당 처리건)</div>
+      <div class="kpi-delta warn">게시판 CPH 기준</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-top-bar green"></div>
+      <div class="kpi-lbl">운영 채널 수</div>
+      <div class="kpi-num">4개</div>
+      <div class="kpi-note">IB · 게시판(국내/국외) · 채널톡</div>
+      <div class="kpi-delta up">2026.03 글로벌 채널 추가</div>
+    </div>
+  </div>
+
+  <!-- ─ 월별 문의량 추이 ─ -->
+  <div class="sec-label" style="margin-top:40px;">월별 전체 문의 건수 추이</div>
+  <div class="chart-full">
+    <div class="chart-full-title">2026년 월별 총 문의 건수</div>
+    <div class="chart-full-sub">인바운드 + 국내·국외 게시판 + 채널톡 합산 · 5월은 5/3일까지 부분 집계</div>
+    <canvas id="monthlyTotal"></canvas>
+  </div>
+
+  <!-- ─ 채널별 문의 구성 ─ -->
+  <div class="sec-label">채널별 문의 구성 비중 (4월 기준)</div>
+  <div class="channel-row">
+    <div class="ch-card">
+      <div class="ch-label">인바운드 (IB)</div>
+      <div class="ch-big blue">20.8%</div>
+      <div class="ch-sub">11,060건 / 응답률 98.9%</div>
+      <div class="ch-bar-wrap"><div class="ch-bar-fill blue" style="width:20.8%"></div></div>
+    </div>
+    <div class="ch-card">
+      <div class="ch-label">게시판 (국내·국외)</div>
+      <div class="ch-big green">36.3%</div>
+      <div class="ch-sub">19,273건 / 처리율 101.2%</div>
+      <div class="ch-bar-wrap"><div class="ch-bar-fill green" style="width:36.3%"></div></div>
+    </div>
+    <div class="ch-card">
+      <div class="ch-label">채널톡 (국내·국외)</div>
+      <div class="ch-big yellow">42.8%</div>
+      <div class="ch-sub">22,742건</div>
+      <div class="ch-bar-wrap"><div class="ch-bar-fill yellow" style="width:42.8%"></div></div>
+    </div>
+  </div>
+
+  <!-- ─ 2개 차트 ─ -->
+  <div class="chart-2" style="margin-bottom:14px;">
+    <div class="chart-box">
+      <div class="chart-title">IB 응답률 월별 추이</div>
+      <div class="chart-sub">인바운드 통화 성공률 · 2월~5월</div>
+      <canvas id="responseRate"></canvas>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">채널별 비중 변화</div>
+      <div class="chart-sub">월별 IB · 게시판 · 채널톡 비중 비교</div>
+      <canvas id="channelMix"></canvas>
+    </div>
+  </div>
+
+  <!-- ─ 국내 게시판 문의 카테고리 ─ -->
+  <div class="sec-label">국내 게시판 문의 유형 분포 (최근 4주 누적)</div>
+  <div class="chart-full" style="padding-bottom:24px;">
+    <div class="chart-full-title">문의 카테고리별 건수 및 비중</div>
+    <div class="chart-full-sub">2026.04.06 ~ 05.03 · 국내 게시판 접수 기준</div>
+    <table class="cat-table">
+      <thead>
+        <tr>
+          <th>카테고리</th>
+          <th>건수</th>
+          <th>비중</th>
+          <th style="width:180px;">비율</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>거래취소 · 신고 · 보류</strong></td>
+          <td class="cat-num">6,237</td>
+          <td><span class="cat-pct">35.1%</span></td>
+          <td><div class="cat-bar"><div class="cat-bar-inner red" style="width:140px"></div></div></td>
+        </tr>
+        <tr>
+          <td>거래방법</td>
+          <td class="cat-num">4,458</td>
+          <td><span class="cat-pct">25.1%</span></td>
+          <td><div class="cat-bar"><div class="cat-bar-inner blue" style="width:100px"></div></div></td>
+        </tr>
+        <tr>
+          <td>서비스 이용</td>
+          <td class="cat-num">3,659</td>
+          <td><span class="cat-pct">20.6%</span></td>
+          <td><div class="cat-bar"><div class="cat-bar-inner blue" style="width:82px"></div></div></td>
+        </tr>
+        <tr>
+          <td>결제 및 환불</td>
+          <td class="cat-num">1,877</td>
+          <td><span class="cat-pct">10.6%</span></td>
+          <td><div class="cat-bar"><div class="cat-bar-inner yellow" style="width:42px"></div></div></td>
+        </tr>
+        <tr>
+          <td>출금</td>
+          <td class="cat-num">1,139</td>
+          <td><span class="cat-pct">6.4%</span></td>
+          <td><div class="cat-bar"><div class="cat-bar-inner" style="width:26px"></div></div></td>
+        </tr>
+        <tr>
+          <td>회원정보</td>
+          <td class="cat-num">522</td>
+          <td><span class="cat-pct">2.9%</span></td>
+          <td><div class="cat-bar"><div class="cat-bar-inner" style="width:12px"></div></div></td>
+        </tr>
+        <tr>
+          <td>입장안심 서비스</td>
+          <td class="cat-num">88</td>
+          <td><span class="cat-pct">0.5%</span></td>
+          <td><div class="cat-bar"><div class="cat-bar-inner green" style="width:4px"></div></div></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="ctx-note" style="margin-top:16px;">
+      <strong>운영 인사이트:</strong> 거래취소·분쟁·신고 유형이 전체의 35%를 점유 — C2C 플랫폼 특성상 이중판매·사기 관련 분쟁이 핵심 CS 이슈. 해당 케이스에 대한 처리 기준 SOP 및 IVR 4번 메뉴 직연결 체계를 구축하여 에스컬레이션 감소 추진.
+    </div>
+  </div>
+
+  <!-- ─ YoY 비교 ─ -->
+  <div class="sec-label">전년 동기 대비 운영 규모 비교</div>
+  <div class="yoy-row">
+    <div class="yoy-card">
+      <div class="yoy-month">2026년 3월</div>
+      <div class="yoy-cols">
+        <div>
+          <div class="yoy-col-label">2024</div>
+          <div class="yoy-col-num dim">12,070</div>
+        </div>
+        <div>
+          <div class="yoy-col-label">2025</div>
+          <div class="yoy-col-num dim">34,105</div>
+        </div>
+        <div>
+          <div class="yoy-col-label">2026</div>
+          <div class="yoy-col-num">28,152</div>
+          <div class="yoy-growth up">IVR 도입 초기</div>
+        </div>
+      </div>
+    </div>
+    <div class="yoy-card highlight">
+      <div class="yoy-month">2026년 4월 · 최고치</div>
+      <div class="yoy-cols">
+        <div>
+          <div class="yoy-col-label">2024</div>
+          <div class="yoy-col-num dim">21,332</div>
+        </div>
+        <div>
+          <div class="yoy-col-label">2025</div>
+          <div class="yoy-col-num dim">41,597</div>
+        </div>
+        <div>
+          <div class="yoy-col-label">2026</div>
+          <div class="yoy-col-num">53,075</div>
+          <div class="yoy-growth up">▲ +27.6% YoY</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─ 주요 운영 성과 ─ -->
+  <div class="sec-label" style="margin-top:40px;">주요 운영 성과 요약</div>
+  <div class="chart-full" style="padding-bottom:24px;">
+    <div class="chart-full-title">2026년 2월 ~ 5월 운영 핵심 성과</div>
+    <div class="chart-full-sub">취임 후 3개월 내 구축 완료 기준</div>
+    <table class="cat-table" style="margin-top:8px;">
+      <thead>
+        <tr>
+          <th>구분</th>
+          <th>내용</th>
+          <th>효과 / 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>IVR 시스템 구축</strong></td>
+          <td>6~7년간 직연결 체계 → 6단계 IVR 도입 (4/28 2차 개선)</td>
+          <td>에이전트 직연결 문의 분산, 채널톡 전환 유도</td>
+        </tr>
+        <tr>
+          <td><strong>글로벌 CS 운영</strong></td>
+          <td>2026.03 글로벌 서비스 런칭 — 국외 게시판·채널 신규 구축</td>
+          <td>글로벌 문의 4월 115건 처리, 별도 SOP 수립</td>
+        </tr>
+        <tr>
+          <td><strong>VOC 분류 체계</strong></td>
+          <td>7개 카테고리 국내 게시판 분류 + 주간 트렌드 모니터링</td>
+          <td>이슈 조기 감지 및 개선 방향 데이터화</td>
+        </tr>
+        <tr>
+          <td><strong>도급사 KPI 관리</strong></td>
+          <td>메타엠 TBI2센터 일보·주보·월보 체계 수립, 실적 모니터링</td>
+          <td>AHT·응답률·처리율 기준 정례 보고 체계 확립</td>
+        </tr>
+        <tr>
+          <td><strong>분쟁 처리 SOP</strong></td>
+          <td>이중판매·계정도용·소보원/공정위 민원 처리 기준 수립</td>
+          <td>메타엠 불필요 에스컬레이션 감소, 처리 일관성 확보</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ══ FOOTER ══ -->
+<div class="footer">
+  <span>김미진 · CS&CX 운영 총괄 포트폴리오</span>
+  <span>티켓베이 / 팀플러스 · 2026.02 ~ 현재</span>
+</div>
+
+<script>
+// ── 월별 총 문의 건수 ──
+new Chart(document.getElementById('monthlyTotal'), {
+  type: 'bar',
+  data: {
+    labels: ['2월', '3월', '4월', '5월(부분)'],
+    datasets: [{
+      label: '총 문의 건수',
+      data: [14856, 28152, 53075, 6147],
+      backgroundColor: ['#d0d0cc','#b8b8b2','#111111','#888'],
+      borderRadius: 4,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => ' ' + ctx.raw.toLocaleString() + '건'
+        }
+      }
+    },
+    scales: {
+      x: { grid: { display:false }, border:{ display:false } },
+      y: {
+        grid: { color:'#f0f0ee' },
+        border: { display:false },
+        ticks: {
+          callback: v => v.toLocaleString()
+        }
+      }
+    }
+  }
+});
+
+// ── IB 응답률 ──
+new Chart(document.getElementById('responseRate'), {
+  type: 'line',
+  data: {
+    labels: ['2월', '3월', '4월', '5월'],
+    datasets: [{
+      label: '응답률',
+      data: [98.25, 99.26, 98.99, 96.25],
+      borderColor: '#1a7a4a',
+      backgroundColor: 'rgba(26,122,74,0.08)',
+      pointBackgroundColor: '#1a7a4a',
+      pointRadius: 5,
+      fill: true,
+      tension: 0.3,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: { label: ctx => ' ' + ctx.raw + '%' }
+      }
+    },
+    scales: {
+      x: { grid:{ display:false }, border:{ display:false } },
+      y: {
+        min: 94, max: 100,
+        grid: { color:'#f0f0ee' },
+        border: { display:false },
+        ticks: { callback: v => v + '%' }
+      }
+    }
+  }
+});
+
+// ── 채널별 비중 변화 ──
+new Chart(document.getElementById('channelMix'), {
+  type: 'bar',
+  data: {
+    labels: ['2월', '3월', '4월'],
+    datasets: [
+      {
+        label: 'IB',
+        data: [19.2, 16.4, 20.8],
+        backgroundColor: '#1a5fa0',
+        borderRadius: 3,
+        stack: 'a',
+      },
+      {
+        label: '게시판',
+        data: [34.1, 38.0, 36.3],
+        backgroundColor: '#1a7a4a',
+        borderRadius: 3,
+        stack: 'a',
+      },
+      {
+        label: '채널톡',
+        data: [46.7, 45.6, 42.8],
+        backgroundColor: '#c08000',
+        borderRadius: 3,
+        stack: 'a',
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { font:{ size:11 }, padding:14 }
+      },
+      tooltip: {
+        callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.raw + '%' }
+      }
+    },
+    scales: {
+      x: { grid:{ display:false }, border:{ display:false }, stacked:true },
+      y: {
+        stacked: true,
+        max: 100,
+        grid: { color:'#f0f0ee' },
+        border: { display:false },
+        ticks: { callback: v => v + '%' }
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>
