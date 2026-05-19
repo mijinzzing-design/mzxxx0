@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IVR 모니터링 통계 분석 | 0302–0517</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+  :root {
+    --bg:#0d0f14; --surface:#151820; --border:#242836;
+    --accent:#4f9cf9; --accent2:#f97316; --accent3:#22c55e;
+    --warn:#ef4444; --muted:#6b7280; --text:#e2e8f0; --text-dim:#94a3b8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:13px;line-height:1.6;}
+
+  header{border-bottom:1px solid var(--border);padding:16px 26px;display:flex;align-items:center;gap:14px;}
+  header h1{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--accent);letter-spacing:.05em;}
+  header .sub{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);}
+  .badge{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px 10px;border-radius:2px;}
+  .badge-chg{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#fca5a5;}
+  .badge-w11{background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.4);color:#fde68a;margin-left:6px;}
+
+  /* KPI strip */
+  .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border);}
+  .kpi{background:var(--surface);padding:16px 20px;}
+  .kl{font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;}
+  .kv{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;line-height:1;}
+  .ks{font-size:10px;color:var(--text-dim);margin-top:4px;}
+  .kd{font-size:10px;margin-top:2px;font-family:'IBM Plex Mono',monospace;}
+  .up{color:var(--warn);} .dn{color:var(--accent3);} .neu{color:var(--muted);}
+
+  /* Layout */
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-bottom:1px solid var(--border);}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-bottom:1px solid var(--border);}
+  .block{background:var(--surface);padding:20px 24px;}
+  .full{background:var(--surface);padding:20px 24px;border-bottom:1px solid var(--border);}
+  .ct{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;}
+  .cd{font-size:11px;color:var(--text-dim);margin-bottom:14px;}
+  .ch{position:relative;height:190px;}
+
+  /* Table */
+  table{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:11px;}
+  th{text-align:right;color:var(--muted);font-size:9px;letter-spacing:.05em;text-transform:uppercase;padding:5px 6px;border-bottom:1px solid var(--border);}
+  th:first-child{text-align:left;}
+  td{text-align:right;padding:6px 6px;border-bottom:1px solid rgba(36,40,54,.4);}
+  td:first-child{text-align:left;color:var(--text-dim);}
+  tr:last-child td{border-bottom:none;}
+  tr.post td{color:var(--accent);}
+  tr.w11 td{color:#fde68a;}
+
+  /* Trend bars */
+  .trend-block{display:flex;flex-direction:column;gap:0;}
+  .tr-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(36,40,54,.4);font-size:11px;}
+  .tr-row:last-child{border-bottom:none;}
+  .tr-name{flex:1.3;color:var(--text-dim);}
+  .tr-bars{flex:2;display:flex;flex-direction:column;gap:3px;}
+  .tr-bar-row{display:flex;align-items:center;gap:5px;}
+  .tr-wk{font-size:8px;color:var(--muted);width:22px;}
+  .tr-bar{height:7px;border-radius:1px;}
+  .tr-val{font-family:'IBM Plex Mono',monospace;font-size:11px;min-width:60px;text-align:right;}
+
+  /* Verdict panel */
+  .verdict{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .v-card{padding:14px 16px;border-radius:2px;font-size:12px;line-height:1.7;}
+  .v-card strong{font-weight:700;display:block;margin-bottom:4px;}
+  .v-red{background:rgba(239,68,68,.07);border-left:3px solid var(--warn);}
+  .v-yellow{background:rgba(251,191,36,.07);border-left:3px solid #fbbf24;}
+  .v-green{background:rgba(34,197,94,.07);border-left:3px solid var(--accent3);}
+
+  /* Sparkline table */
+  .sp-num{font-family:'IBM Plex Mono',monospace;}
+  .arrow-up{color:var(--warn);}
+  .arrow-dn{color:var(--accent3);}
+
+  footer{padding:10px 26px;font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;border-top:1px solid var(--border);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>IVR MONITORING</h1>
+  <span class="sub">2026.03.02 – 05.17 · 11weeks · TBI2</span>
+  <div class="badge badge-chg">시나리오 변경 04.28</div>
+  <div class="badge badge-w11">▶ W11 추가 · 변경후 3주</div>
+</header>
+
+<!-- KPI -->
+<div class="kpi-row">
+  <div class="kpi">
+    <div class="kl">W11 총인입</div>
+    <div class="kv" style="color:var(--accent)">7,643</div>
+    <div class="ks">W10(6,946) <span class="up">+10.0%</span> 반등</div>
+    <div class="kd neu">11주 누계 72,952건</div>
+  </div>
+  <div class="kpi">
+    <div class="kl">W11 드롭아웃율</div>
+    <div class="kv" style="color:var(--accent3)">38.5%</div>
+    <div class="ks">W10 40.8% 대비 <span class="dn">-2.3%p</span> 개선</div>
+    <div class="kd neu">변경후 3주 : 38.4→40.8→38.5%</div>
+  </div>
+  <div class="kpi">
+    <div class="kl">W11 상담원연결율</div>
+    <div class="kv" style="color:var(--warn)">41.8%</div>
+    <div class="ks">3주 연속 상승 <span class="up">↑↑↑</span></div>
+    <div class="kd up">변경전 평균 32.2% → +9.6%p 이탈 고착</div>
+  </div>
+  <div class="kpi">
+    <div class="kl">기타상담원연결 W11</div>
+    <div class="kv" style="color:var(--warn)">2,150</div>
+    <div class="ks">W09→W10→W11: <span class="up">1,896→1,935→2,150</span></div>
+    <div class="kd up">3주 연속 증가 · 고착화 확정 판정</div>
+  </div>
+  <div class="kpi">
+    <div class="kl">PIN오류 W11</div>
+    <div class="kv" style="color:var(--warn)">523</div>
+    <div class="ks">W10 381 대비 <span class="up">+37.3%</span> 재급등</div>
+    <div class="kd up">W09(523)→W10(381)→W11(523) 구조적 증가</div>
+  </div>
+</div>
+
+<!-- Charts row 1 -->
+<div class="row2">
+  <div class="block">
+    <div class="ct">주별 총인입 & 드롭아웃율</div>
+    <div class="cd">변경 후 드롭아웃 등락 반복 — 안정화 미완료</div>
+    <div class="ch"><canvas id="c1"></canvas></div>
+  </div>
+  <div class="block">
+    <div class="ct">상담원연결율 추이 (변경전 평균 기준선)</div>
+    <div class="cd">변경 후 3주 연속 상승 — 구조적 이탈 확정</div>
+    <div class="ch"><canvas id="c2"></canvas></div>
+  </div>
+</div>
+
+<!-- Stacked menu -->
+<div class="full">
+  <div class="ct">주별 메뉴 선택 분포</div>
+  <div class="cd" style="margin-bottom:12px">기타상담원연결(적색) 3주 연속 팽창 중 — 취소분쟁 전체 흡수 비율 W11 53.3%</div>
+  <div class="ch"><canvas id="c3"></canvas></div>
+</div>
+
+<!-- Table + trend -->
+<div class="row2">
+  <div class="block">
+    <div class="ct" style="margin-bottom:10px">주차별 핵심 수치</div>
+    <table>
+      <thead>
+        <tr>
+          <th>주차</th><th>총인입</th><th>드롭아웃</th><th>상담원율</th><th>기타상담원</th><th>기타/취소</th><th>PIN오류</th>
+        </tr>
+      </thead>
+      <tbody id="tbl"></tbody>
+    </table>
+  </div>
+  <div class="block">
+    <div class="ct" style="margin-bottom:10px">변경후 3주 핵심 지표 비교</div>
+    <div class="trend-block" id="trend"></div>
+  </div>
+</div>
+
+<!-- Charts row 2 -->
+<div class="row2">
+  <div class="block">
+    <div class="ct">기타상담원연결 3주 추이</div>
+    <div class="cd">절대건수 & 취소분쟁 내 비율 — 증가세 지속</div>
+    <div class="ch"><canvas id="c4"></canvas></div>
+  </div>
+  <div class="block">
+    <div class="ct">PIN오류·미수령 재발송 주별 추이</div>
+    <div class="cd">W10 반락 후 W11 재급등 — 구조적 증가 판단</div>
+    <div class="ch"><canvas id="c5"></canvas></div>
+  </div>
+</div>
+
+<!-- Verdict -->
+<div class="full">
+  <div class="ct" style="margin-bottom:14px">▶ 변경후 3주 종합 판정</div>
+  <div class="verdict">
+    <div class="v-card v-red">
+      <strong>🔴 기타상담원연결 — 즉시 조치 필요</strong>
+      W09 1,896 → W10 1,935 → W11 2,150건. 3주 연속 증가. 총인입 대비 비율도 23.3%→27.9%→28.1%로 악화일로. 취소분쟁 진입자의 절반 이상(53%)이 '기타'를 누르고 상담원으로 넘어오고 있음. <strong>현재 취소분쟁 서브메뉴가 실제 문의 유형을 커버 못 하고 있다는 뜻.</strong> 기타 상담원 연결 VOC 100건 이상 샘플링 → 메뉴 세분화 or SOP 추가 필요.
+    </div>
+    <div class="v-card v-red">
+      <strong>🔴 상담원연결율 41.8% — 고착화 확정</strong>
+      변경전 32.2% → 변경후 40.1%→41.0%→41.8% (3주 연속 상승). 단순 적응 기간 이슈가 아님. 기타상담원연결 실제 상담원 전환(W11 1,775건)이 핵심 원인. TBI2 상담원 실질 처리 부하 변경 전 대비 30%p 이상 증가한 상태. <strong>메타엠과 현황 공유 및 인력 대응 여부 확인 필요.</strong>
+    </div>
+    <div class="v-card v-yellow">
+      <strong>🟡 드롭아웃율 — 등락 반복, 아직 판단 보류</strong>
+      38.4%→40.8%→38.5%. 방향성 불명확. W10 고점 후 W11 반락은 긍정적이나, 변경 전 최저 37.0% 대비 여전히 1.5%p 높음. 주간 이벤트/공연 일정 영향 있을 수 있어 최소 2~3주 더 추적 필요. 40% 재돌파 시 시나리오 재검토 트리거로 설정 권장.
+    </div>
+    <div class="v-card v-red">
+      <strong>🔴 PIN오류 523건 — 구조적 증가 판단</strong>
+      W08(454)→W09(523)→W10(381)→W11(523). W10 반락을 이벤트성으로 봤으나 W11 재급등으로 구조적 증가 판정. ARS 자동완결 비율 별도 확인 필요. PIN 관련 안내 콘텐츠 업데이트 or 채널톡 FAQ 강화로 IVR 인입 전환 고려.
+    </div>
+    <div class="v-card v-yellow">
+      <strong>🟡 거래방법·환불정산 감소 — 긍정적이나 검증 필요</strong>
+      변경 전(W08) 거래방법 1,072→W11 401건(-63%), 환불정산 751→263건(-65%). 대폭 감소 추세 유지. <strong>ARS 자동완결 비율이 높다면 채널 전환 성공.</strong> 그러나 이 문의들이 채널톡/게시판으로 이동했는지, 아니면 드롭아웃으로 빠져나갔는지 확인 필요. 비채널 전환이면 미해결 고객 누적 위험.
+    </div>
+    <div class="v-card v-green">
+      <strong>🟢 총인입 및 전체 볼륨 — 이상 없음</strong>
+      W11 7,643건으로 W10 대비 반등. 10주 초기(W01 1,395) 대비 5배 수준이나 이는 시즌 이벤트 누적 영향. 전체 인입 추세 자체는 비정상 없음. 다만 인입 증가분 대비 상담원 연결 증가 속도가 더 빠르다는 점이 문제.
+    </div>
+  </div>
+</div>
+
+<footer>TBI2 IVR 모니터링 · 0302~0517 (11weeks) · 시나리오 변경 04.28 · 변경후 3주 판정 완료 · Generated by Claude</footer>
+
+<script>
+const RAW = [
+  {w:'W01\n3/2~8',    total:1395, drop_r:46.2, 거:149,  환:100,  회:59,  취:443,  기:0,    취소:205,  분:126, pin:48,  신:31,  ag_r:30.9, post:false},
+  {w:'W02\n3/9~15',   total:2473, drop_r:47.7, 거:237,  환:181,  회:105, 취:770,  기:0,    취소:360,  분:221, pin:62,  신:73,  ag_r:29.7, post:false},
+  {w:'W03\n3/16~22',  total:3049, drop_r:43.6, 거:357,  환:223,  회:148, 취:992,  기:0,    취소:516,  분:227, pin:84,  신:85,  ag_r:30.4, post:false},
+  {w:'W04\n3/23~29',  total:5046, drop_r:39.7, 거:633,  환:440,  회:140, 취:1828, 기:0,    취소:888,  분:475, pin:197, 신:139, ag_r:34.4, post:false},
+  {w:'W05\n3/30~4/5', total:8081, drop_r:38.5, 거:915,  환:830,  회:214, 취:3008, 기:0,    취소:1423, 분:763, pin:364, 신:219, ag_r:34.9, post:false},
+  {w:'W06\n4/6~12',   total:6993, drop_r:39.1, 거:831,  환:560,  회:179, 취:2690, 기:0,    취소:1281, 분:740, pin:331, 신:199, ag_r:32.1, post:false},
+  {w:'W07\n4/13~19',  total:7015, drop_r:38.0, 거:940,  환:665,  회:156, 취:2586, 기:0,    취소:1304, 분:596, pin:341, 신:182, ag_r:33.1, post:false},
+  {w:'W08\n4/20~26',  total:8063, drop_r:37.0, 거:1072, 환:751,  회:231, 취:3028, 기:0,    취소:1460, 분:724, pin:454, 신:206, ag_r:31.7, post:false},
+  {w:'W09\n4/27~5/3', total:8148, drop_r:38.4, 거:520,  환:382,  회:0,   취:4098, 기:1896, 취소:1135, 분:358, pin:523, 신:164, ag_r:40.1, post:true},
+  {w:'W10\n5/4~10',   total:6946, drop_r:40.8, 거:366,  환:292,  회:0,   취:3457, 기:1935, 취소:723,  분:263, pin:381, 신:155, ag_r:41.0, post:true},
+  {w:'W11\n5/11~17',  total:7643, drop_r:38.5, 거:401,  환:263,  회:0,   취:4035, 기:2150, 취소:904,  분:300, pin:523, 신:158, ag_r:41.8, post:true},
+];
+
+Chart.defaults.color='#6b7280';
+Chart.defaults.font.family="'IBM Plex Mono', monospace";
+Chart.defaults.font.size=10;
+const GC='rgba(36,40,54,.8)';
+const LABELS=RAW.map(d=>d.w);
+
+function vLine(){
+  return {id:'vl',afterDraw(chart){
+    const {ctx,chartArea:{top,bottom},scales:{x}}=chart;
+    const xp=x.getPixelForValue(8.5);
+    ctx.save();
+    ctx.strokeStyle='rgba(239,68,68,.45)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(xp,top);ctx.lineTo(xp,bottom);ctx.stroke();
+    ctx.fillStyle='#fca5a5';ctx.font='9px IBM Plex Mono';
+    ctx.fillText('04.28▶',xp+3,top+10);
+    ctx.restore();
+  }};
+}
+
+// C1
+new Chart(document.getElementById('c1'),{type:'bar',
+  data:{labels:LABELS,datasets:[
+    {label:'총인입호',data:RAW.map(d=>d.total),yAxisID:'y',
+     backgroundColor:RAW.map(d=>d.post?'rgba(249,115,22,.4)':'rgba(79,156,249,.28)'),
+     borderColor:RAW.map(d=>d.post?'rgba(249,115,22,.85)':'rgba(79,156,249,.65)'),borderWidth:1,order:2},
+    {label:'드롭아웃율',data:RAW.map(d=>d.drop_r),type:'line',yAxisID:'y2',
+     borderColor:'#22c55e',backgroundColor:'transparent',borderWidth:2,
+     pointBackgroundColor:RAW.map(d=>d.post?'#f59e0b':'#22c55e'),pointRadius:4,tension:.3,order:1}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{boxWidth:10,padding:10}},
+      tooltip:{callbacks:{label:ctx=>ctx.dataset.yAxisID==='y2'?ctx.dataset.label+': '+ctx.raw.toFixed(1)+'%':ctx.dataset.label+': '+ctx.raw.toLocaleString()+'건'}}},
+    scales:{x:{grid:{color:GC},ticks:{maxRotation:0}},
+      y:{grid:{color:GC},position:'left',ticks:{callback:v=>(v/1000).toFixed(0)+'K'}},
+      y2:{grid:{display:false},position:'right',min:32,max:52,ticks:{callback:v=>v+'%'}}}},
+  plugins:[vLine()]});
+
+// C2
+new Chart(document.getElementById('c2'),{type:'line',
+  data:{labels:LABELS,datasets:[
+    {label:'상담원연결율',data:RAW.map(d=>d.ag_r),
+     borderColor:'#f97316',backgroundColor:'rgba(249,115,22,.07)',fill:true,
+     borderWidth:2,pointBackgroundColor:RAW.map(d=>d.post?'#ef4444':'#f97316'),pointRadius:4,tension:.3},
+    {label:'변경전 평균 32.2%',data:RAW.map(()=>32.2),type:'line',
+     borderColor:'rgba(107,114,128,.5)',borderDash:[4,4],borderWidth:1,pointRadius:0,backgroundColor:'transparent'}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{boxWidth:10,padding:10}}},
+    scales:{x:{grid:{color:GC},ticks:{maxRotation:0}},
+      y:{grid:{color:GC},min:26,max:46,ticks:{callback:v=>v+'%'}}}},
+  plugins:[vLine()]});
+
+// C3 stacked
+new Chart(document.getElementById('c3'),{type:'bar',
+  data:{labels:LABELS,datasets:[
+    {label:'거래방법·PIN',data:RAW.map(d=>d.거),backgroundColor:'rgba(79,156,249,.8)'},
+    {label:'환불·정산·출금',data:RAW.map(d=>d.환),backgroundColor:'rgba(168,85,247,.8)'},
+    {label:'회원·계정(폐지)',data:RAW.map(d=>d.회),backgroundColor:'rgba(107,114,128,.45)'},
+    {label:'취소·분쟁(기타 제외)',data:RAW.map(d=>d.취-d.기),backgroundColor:'rgba(249,115,22,.75)'},
+    {label:'기타상담원연결(신설)',data:RAW.map(d=>d.기),backgroundColor:'rgba(239,68,68,.85)'},
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{boxWidth:10,padding:8}},tooltip:{mode:'index'}},
+    scales:{x:{stacked:true,grid:{color:GC},ticks:{maxRotation:0}},
+      y:{stacked:true,grid:{color:GC},ticks:{callback:v=>(v/1000).toFixed(0)+'K'}}}},
+  plugins:[vLine()]});
+
+// Table
+const tbody=document.getElementById('tbl');
+RAW.forEach(d=>{
+  const menu=d.total*(1-d.drop_r/100);
+  const 기비=d.기>0?(d.기/d.취*100).toFixed(1)+'%':'-';
+  const tr=document.createElement('tr');
+  if(d.w.includes('W11'))tr.classList.add('w11');
+  else if(d.post)tr.classList.add('post');
+  tr.innerHTML=`
+    <td>${d.w.replace('\n',' ')}</td>
+    <td>${d.total.toLocaleString()}</td>
+    <td style="color:${d.drop_r>=40?'#ef4444':d.drop_r>=38?'#fbbf24':'#22c55e'}">${d.drop_r}%</td>
+    <td style="color:${d.ag_r>=40?'#ef4444':d.ag_r>=35?'#fbbf24':'#94a3b8'}">${d.ag_r}%</td>
+    <td style="color:${d.기>0?'#ef4444':'var(--muted)'}">${d.기>0?d.기.toLocaleString():'-'}</td>
+    <td style="color:${d.기>0?'#ef4444':'var(--muted)'}">${기비}</td>
+    <td style="color:${d.pin>=450?'#ef4444':d.pin>=300?'#fbbf24':'#94a3b8'}">${d.pin}</td>
+  `;
+  tbody.appendChild(tr);
+});
+
+// Trend block (post-change 3 weeks)
+const POST=RAW.slice(8);
+const TREND_ITEMS=[
+  {name:'총 인입',vals:POST.map(d=>d.total),unit:'건',fmt:v=>v.toLocaleString()},
+  {name:'드롭아웃율',vals:POST.map(d=>d.drop_r),unit:'%',fmt:v=>v.toFixed(1)+'%',colors:v=>v>=40?'#ef4444':v>=38?'#fbbf24':'#22c55e'},
+  {name:'상담원연결율',vals:POST.map(d=>d.ag_r),unit:'%',fmt:v=>v.toFixed(1)+'%',colors:v=>v>=40?'#ef4444':'#f97316'},
+  {name:'기타상담원연결',vals:POST.map(d=>d.기),unit:'건',fmt:v=>v.toLocaleString(),colors:()=>'#ef4444'},
+  {name:'기타/취소분쟁',vals:POST.map(d=>(d.기/d.취*100)),unit:'%',fmt:v=>v.toFixed(1)+'%',colors:()=>'#ef4444'},
+  {name:'PIN오류',vals:POST.map(d=>d.pin),unit:'건',fmt:v=>v.toLocaleString(),colors:v=>v>=500?'#ef4444':'#fbbf24'},
+];
+const trendDiv=document.getElementById('trend');
+const maxByItem=TREND_ITEMS.map(t=>Math.max(...t.vals));
+TREND_ITEMS.forEach((t,idx)=>{
+  const wks=['W09','W10','W11'];
+  const barRows=t.vals.map((v,i)=>{
+    const pct=Math.round(v/maxByItem[idx]*100);
+    const col=t.colors?t.colors(v):'#4f9cf9';
+    const isLast=i===t.vals.length-1;
+    return `<div class="tr-bar-row">
+      <span class="tr-wk">${wks[i]}</span>
+      <div class="tr-bar" style="width:${pct}px;background:${col};opacity:${isLast?1:.55};"></div>
+    </div>`;
+  }).join('');
+  const v9=t.vals[0],v11=t.vals[2];
+  const trend=v11>v9?'↑':'↓';
+  const trendCol=t.name.includes('드롭')?(v11>v9?'#ef4444':'#22c55e'):(t.name.includes('총')?'#4f9cf9':(v11>v9?'#ef4444':'#22c55e'));
+  trendDiv.innerHTML+=`<div class="tr-row">
+    <div class="tr-name">${t.name}</div>
+    <div class="tr-bars">${barRows}</div>
+    <div class="tr-val" style="color:${trendCol}">${t.fmt(v11)} <span style="font-size:9px">${trend}</span></div>
+  </div>`;
+});
+
+// C4: 기타상담원연결 3주
+new Chart(document.getElementById('c4'),{type:'bar',
+  data:{labels:['W09 (4/27~5/3)','W10 (5/4~10)','W11 (5/11~17)'],
+    datasets:[
+      {label:'기타상담원연결 총',data:[1896,1935,2150],backgroundColor:['rgba(239,68,68,.45)','rgba(239,68,68,.65)','rgba(239,68,68,.9)'],yAxisID:'y',order:2},
+      {label:'실제 상담원 전환',data:[1548,1635,1775],backgroundColor:['rgba(249,115,22,.35)','rgba(249,115,22,.55)','rgba(249,115,22,.8)'],yAxisID:'y',order:2},
+      {label:'기타/취소분쟁(%)',data:[46.3,56.0,53.3],type:'line',borderColor:'#fbbf24',backgroundColor:'transparent',borderWidth:2,pointRadius:5,yAxisID:'y2',order:1},
+    ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{boxWidth:10,padding:10}}},
+    scales:{
+      x:{grid:{color:GC}},
+      y:{grid:{color:GC},ticks:{callback:v=>v.toLocaleString()}},
+      y2:{grid:{display:false},position:'right',min:35,max:65,ticks:{callback:v=>v+'%'}}}}});
+
+// C5: PIN 추이 all weeks
+new Chart(document.getElementById('c5'),{type:'line',
+  data:{labels:LABELS,datasets:[
+    {label:'PIN오류·미수령',data:RAW.map(d=>d.pin),
+     borderColor:'#4f9cf9',backgroundColor:'rgba(79,156,249,.08)',fill:true,
+     borderWidth:2,pointBackgroundColor:RAW.map(d=>d.pin>=500?'#ef4444':d.pin>=350?'#fbbf24':'#4f9cf9'),
+     pointRadius:4,tension:.3}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{x:{grid:{color:GC},ticks:{maxRotation:0}},
+      y:{grid:{color:GC},min:0,ticks:{callback:v=>v+'건'}}}},
+  plugins:[vLine()]});
+</script>
+</body>
+</html>
