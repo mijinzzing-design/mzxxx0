@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>오후 인력 운영 검토 — 2026.05</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:#f1f5f9;color:#1e293b;font-size:13px;line-height:1.5}
+.page{max-width:860px;margin:0 auto;padding:28px 20px;display:flex;flex-direction:column;gap:12px}
+
+/* ── 헤더 ── */
+.hdr{background:#0f172a;border-radius:10px;padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px}
+.hdr-left h1{font-size:17px;font-weight:700;color:#f1f5f9;margin-bottom:4px}
+.hdr-left p{font-size:11px;color:#64748b}
+.verdict{background:#0d9488;border-radius:6px;padding:8px 16px;text-align:center;flex-shrink:0}
+.verdict .vt{font-size:11px;color:#99f6e4;margin-bottom:2px}
+.verdict .vv{font-size:16px;font-weight:700;color:white}
+
+/* ── 카드 그리드 ── */
+.row{display:grid;gap:10px}
+.r4{grid-template-columns:repeat(4,1fr)}
+.r2{grid-template-columns:1fr 1fr}
+.r3{grid-template-columns:1fr 1fr 1fr}
+.card{background:white;border-radius:8px;padding:14px 16px;border:1px solid #e2e8f0}
+.card.dark{background:#0f172a;border-color:#1e293b}
+.lbl{font-size:11px;color:#94a3b8;margin-bottom:4px}
+.val{font-size:24px;font-weight:700;color:#0f172a;line-height:1.1;font-variant-numeric:tabular-nums}
+.val.ok{color:#059669}.val.hi{color:#2563eb}.val.warn{color:#dc2626}
+.sub{font-size:10px;color:#94a3b8;margin-top:4px}
+.card.dark .lbl{color:#475569}
+.card.dark .val{color:#f1f5f9}
+.card.dark .sub{color:#334155}
+
+/* ── 섹션 타이틀 ── */
+.stitle{font-size:11px;font-weight:700;color:#64748b;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #e2e8f0}
+
+/* ── 차트 ── */
+.ch-wrap{position:relative;width:100%}
+
+/* ── 판정 테이블 ── */
+.judge-table{width:100%;border-collapse:collapse;font-size:11px}
+.judge-table th{padding:6px 8px;text-align:left;color:#94a3b8;font-weight:600;border-bottom:1.5px solid #f1f5f9;font-size:10px}
+.judge-table td{padding:6px 8px;border-bottom:1px solid #f8fafc;color:#1e293b;vertical-align:middle}
+.judge-table td:last-child{text-align:right}
+.judge-table tr:last-child td{border-bottom:none}
+.crit-name{font-weight:600;color:#1e293b}
+.crit-cur{font-weight:700;color:#dc2626}
+.crit-thr{color:#94a3b8}
+.badge{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:700;display:inline-block}
+.badge.fail{background:#fef2f2;color:#dc2626}
+.badge.ok{background:#f0fdf4;color:#059669}
+.minibr{height:4px;border-radius:2px;background:#f1f5f9;position:relative;margin:4px 0 2px}
+.minibr-fill{height:100%;border-radius:2px;position:absolute;top:0;left:0}
+.minibr-mark{position:absolute;top:-3px;width:2px;height:10px;background:rgba(0,0,0,.15)}
+
+/* ── Slack 요약 ── */
+.slack-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f8fafc;font-size:11px}
+.slack-row:last-child{border-bottom:none}
+.s-time{color:#94a3b8;min-width:110px;flex-shrink:0}
+.s-ch{color:#94a3b8;min-width:90px;flex-shrink:0}
+.s-tag{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700;flex-shrink:0;min-width:60px;text-align:center}
+.s-tag.wkd{background:#fef3c7;color:#92400e}
+.s-tag.ok{background:#f0fdf4;color:#166534}
+.s-tag.plain{background:#f1f5f9;color:#64748b}
+.s-text{color:#64748b}
+
+/* ── SOP 섹션 ── */
+.sop-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sop-box{border-radius:8px;padding:14px 16px;border:1px solid #e2e8f0}
+.sop-box.teal{border-left:3px solid #0d9488;background:#f0fdfa}
+.sop-box.blue{border-left:3px solid #2563eb;background:#eff6ff}
+.sop-box.amber{border-left:3px solid #f59e0b;background:#fffbeb}
+.sop-box.slate{border-left:3px solid #64748b;background:#f8fafc}
+.sop-title{font-size:11px;font-weight:700;margin-bottom:8px;color:#1e293b}
+.sop-list{list-style:none;display:flex;flex-direction:column;gap:5px}
+.sop-list li{font-size:11px;color:#475569;display:flex;gap:6px;line-height:1.5}
+.sop-list li::before{content:'·';color:#94a3b8;flex-shrink:0;font-weight:700}
+.sop-list li strong{color:#1e293b;font-weight:600}
+
+/* ── 이관 템플릿 ── */
+.tmpl{background:#1e293b;border-radius:8px;padding:14px 16px;font-size:11px;color:#94a3b8;font-family:monospace;line-height:1.8}
+.tmpl .t-title{color:#38bdf8;font-weight:700;margin-bottom:6px}
+.tmpl span{color:#e2e8f0}
+
+/* ── 결론 ── */
+.conclusion{background:#0f172a;border-radius:10px;padding:18px 22px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.conc-pts{display:flex;flex-direction:column;gap:7px}
+.conc-pt{font-size:11px;color:#94a3b8;display:flex;gap:7px;line-height:1.5}
+.conc-pt .dot{color:#38bdf8;flex-shrink:0;font-weight:700}
+.conc-rec{border-left:2px solid #0d9488;padding-left:14px}
+.conc-rec .rec-lbl{font-size:10px;color:#0d9488;font-weight:700;margin-bottom:6px;letter-spacing:.06em}
+.conc-rec p{font-size:11px;color:#64748b;line-height:1.7}
+.conc-rec strong{color:#94a3b8}
+
+@media print{
+  body{background:white}
+  .card,.sop-box{box-shadow:none}
+  .conclusion,.hdr,.tmpl{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- 헤더 -->
+<div class="hdr">
+  <div class="hdr-left">
+    <h1>오후 근무인원 관리자 불필요 검토 + 운영 대안</h1>
+    <p>2026년 5월 · 인바운드 통계 + Slack #cs-hotline · #cx 전수 기준 · 메타엠 파트장 관리자 요청 대응</p>
+  </div>
+  <div class="verdict">
+    <div class="vt">데이터 판정</div>
+    <div class="vv">관리자 추가 불필요</div>
+  </div>
+</div>
+
+<!-- KPI -->
+<div>
+  <div class="stitle">핵심 지표</div>
+  <div class="row r4">
+    <div class="card"><div class="lbl">오후 전용 응답율 (18–21시)</div><div class="val ok">98.2%</div><div class="sub">전체 97.3% 대비 +0.9%p</div></div>
+    <div class="card"><div class="lbl">18시 이후 일평균 인입</div><div class="val">67콜</div><div class="sub">13시 피크 대비 −87%</div></div>
+    <div class="card"><div class="lbl">관리자 필요 조건 충족</div><div class="val ok">0 / 5</div><div class="sub">5개 기준 전체 미달</div></div>
+    <div class="card"><div class="lbl">Slack 18시 이후 에스컬</div><div class="val ok">0건</div><div class="sub">관리자 판단 필요 실적 없음</div></div>
+  </div>
+</div>
+
+<!-- 차트 + 판정표 -->
+<div class="row r2">
+  <!-- 차트 -->
+  <div class="card">
+    <div class="stitle" style="margin-bottom:10px">시간대별 인입량 / 응답율 (2026년 5월)</div>
+    <div style="display:flex;gap:10px;font-size:10px;color:#94a3b8;margin-bottom:8px">
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#94a3b8;display:inline-block"></span>오전</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#f59e0b;display:inline-block"></span>전환</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#0d9488;display:inline-block"></span>오후 전용</span>
+    </div>
+    <div class="ch-wrap" style="height:180px"><canvas id="comboChart" role="img" aria-label="시간대별 인입량과 응답율 복합 차트"></canvas></div>
+  </div>
+
+  <!-- 판정표 -->
+  <div class="card">
+    <div class="stitle" style="margin-bottom:10px">관리자 필요 조건 판정</div>
+    <table class="judge-table">
+      <thead><tr><th>기준</th><th>임계값</th><th>현재</th><th style="text-align:right">판정</th></tr></thead>
+      <tbody id="judgeBody"></tbody>
+    </table>
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid #f1f5f9;font-size:10px;color:#94a3b8;line-height:1.6">
+      파트장 : 상담사 현재 <strong style="color:#1e293b">1 : 2–3명</strong> — 업계 적정 스판(1:8–12) 대비 이미 과잉 감독 상태
+    </div>
+  </div>
+</div>
+
+<!-- Slack -->
+<div class="card">
+  <div class="stitle" style="margin-bottom:10px">Slack 채널 문의 · 클레임 시간대 분포 (#cs-hotline + #cx · 전수)</div>
+  <div class="row r4" style="margin-bottom:12px">
+    <div style="text-align:center;padding:10px 0;border-right:1px solid #f1f5f9">
+      <div style="font-size:20px;font-weight:700;color:#2563eb">58건</div>
+      <div style="font-size:10px;color:#94a3b8;margin-top:2px">전체 집계</div>
+    </div>
+    <div style="text-align:center;padding:10px 0;border-right:1px solid #f1f5f9">
+      <div style="font-size:20px;font-weight:700;color:#dc2626">53건</div>
+      <div style="font-size:10px;color:#94a3b8;margin-top:2px">09–18시 (91.4%)</div>
+    </div>
+    <div style="text-align:center;padding:10px 0;border-right:1px solid #f1f5f9">
+      <div style="font-size:20px;font-weight:700;color:#94a3b8">5건</div>
+      <div style="font-size:10px;color:#94a3b8;margin-top:2px">18시 이후 (8.6%)</div>
+    </div>
+    <div style="text-align:center;padding:10px 0">
+      <div style="font-size:20px;font-weight:700;color:#059669">0건</div>
+      <div style="font-size:10px;color:#94a3b8;margin-top:2px">관리자 개입 필요</div>
+    </div>
+  </div>
+  <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:6px">18시 이후 발생 5건 전체 (관리자 개입 없이 종결 또는 비업무일)</div>
+  <div id="after18"></div>
+</div>
+
+<!-- SOP 대안 -->
+<div>
+  <div class="stitle">운영 대안 — 파트장 SOP 체계 (기배포 완료) + #cx 이관 정비</div>
+  <div class="sop-grid">
+
+    <div class="sop-box teal">
+      <div class="sop-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>✦ 악성고객 대응 SOP</span>
+        <span style="font-size:9px;background:#0d9488;color:white;padding:2px 7px;border-radius:3px;font-weight:700">2026.05 배포완료</span>
+      </div>
+      <ul class="sop-list">
+        <li><strong>A유형 (언어폭력)</strong> — 1·2·3차 단계 대응, 2차부터 상담사 단독 종료 권한</li>
+        <li><strong>B유형 (거래악용)</strong> — 지연발송·오등록 악용 판단 기준 80% 룰</li>
+        <li>복합 위반 → 상급자 검토 후 판/구매 제한, #sx_cs 에스컬</li>
+        <li>#sx_cs 전달 형식 표준화 완료</li>
+        <li style="color:#94a3b8;font-size:10px">상담 종료 권한 명시 → 파트장 심리적 안전망 확보</li>
+      </ul>
+    </div>
+
+    <div class="sop-box blue">
+      <div class="sop-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>✦ 외부 민원 대응 가이드</span>
+        <span style="font-size:9px;background:#2563eb;color:white;padding:2px 7px;border-radius:3px;font-weight:700">배포완료</span>
+      </div>
+      <ul class="sop-list">
+        <li>소비자보호법·공정위·전자상거래법 위반 없을 경우 → 신고 안내 후 종료</li>
+        <li>권장 답변 문구 표준화 — "규정상 어려운 점 양해 부탁드립니다…"</li>
+        <li>끝까지 정중함 유지 = 소보원 조사 시 가장 강력한 방어</li>
+        <li>억지 지속 시에도 끝까지 정중함 유지 — 정중함이 소보원 조사 시 가장 강력한 방어</li>
+        <li style="color:#94a3b8;font-size:10px">긴급 관리자 연락 없음 — #cx 채널 요약 포스팅으로 대체</li>
+      </ul>
+    </div>
+
+    <div class="sop-box amber">
+      <div class="sop-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>↗ #cx 이관 케이스 기준 <small style="font-weight:400">(추가 정비 필요)</small></span>
+        <span style="font-size:9px;background:#f59e0b;color:white;padding:2px 7px;border-radius:3px;font-weight:700">보완 필요</span>
+      </div>
+      <ul class="sop-list">
+        <li><strong>판단 권한 초과</strong> — 개인정보 유출 의심, 명의도용 신고</li>
+        <li><strong>금전 협의 필요</strong> — 보상 금액 결정이 필요한 케이스</li>
+        <li><strong>계정 제재·복구</strong> — 영구정지 등 권한 밖 조치</li>
+        <li>법적 대응 예고 — 가이드대로 응대 후 #cx에 요약 포스팅</li>
+        <li style="color:#94a3b8;font-size:10px">위 케이스 이외의 모든 것은 파트장이 단독 처리</li>
+      </ul>
+    </div>
+
+    <div class="sop-box slate">
+      <div class="sop-title">📋 #cx 이관 포스팅 형식</div>
+      <div class="tmpl" style="margin-top:0;border-radius:6px;font-size:10px;padding:10px 12px">
+        <div class="t-title">[이관] 20:10 | 개인정보유출 의심</div>
+        <div>주문 : <span>CM2026xxxxxx</span></div>
+        <div>현상 : <span>타인 정보로 예매됐다고 신고 요청</span></div>
+        <div>응대 : <span>정중 응대, 추가 확인 안내 후 종료</span></div>
+        <div>필요 : <span>개인정보 접근 이력 확인 및 처리</span></div>
+        <div style="margin-top:6px"></div>
+        <div class="t-title">[이관] 21:30 | 법적 대응 예고</div>
+        <div>주문 : <span>CM2026xxxxxx</span></div>
+        <div>현상 : <span>좌석 오표기 건, 소비자원 신고 예고</span></div>
+        <div>응대 : <span>"신고 가능하십니다" 정중 안내 후 종료</span></div>
+        <div>필요 : <span>해당 거래건 검토 및 대응 방향 결정</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SOP 운영 구조 — 나머지 하나 보완하면 완성 -->
+<div class="card">
+  <div class="stitle" style="margin-bottom:10px">SOP 운영 구조 — 나머지 하나 보완하면 완성</div>
+  <div class="row r3" style="gap:0">
+    <div style="text-align:center;padding:14px;border-right:1px solid #f1f5f9">
+      <div style="font-size:22px;font-weight:700;color:#0d9488;margin-bottom:4px">월 1회</div>
+      <div style="font-size:11px;font-weight:600;color:#1e293b;margin-bottom:4px">SOP 리뷰</div>
+      <div style="font-size:10px;color:#94a3b8">이관 로그 기반 케이스 추가·수정<br>살아있는 문서 유지</div>
+    </div>
+    <div style="text-align:center;padding:14px;border-right:1px solid #f1f5f9">
+      <div style="font-size:22px;font-weight:700;color:#2563eb;margin-bottom:4px">익일 09시</div>
+      <div style="font-size:11px;font-weight:600;color:#1e293b;margin-bottom:4px">관리자 이관 처리</div>
+      <div style="font-size:10px;color:#94a3b8">출근 즉시 로그 확인<br>우선순위 처리 → 당일 완결</div>
+    </div>
+    <div style="text-align:center;padding:14px">
+      <div style="font-size:22px;font-weight:700;color:#f59e0b;margin-bottom:4px">분기 1회</div>
+      <div style="font-size:11px;font-weight:600;color:#1e293b;margin-bottom:4px">도급사 운영 리뷰</div>
+      <div style="font-size:10px;color:#94a3b8">이관 건수 추이 검토<br>SOP 공백 케이스 점검</div>
+    </div>
+  </div>
+</div>
+
+<!-- 결론 -->
+<div class="conclusion">
+  <div class="conc-pts">
+    <div style="font-size:12px;font-weight:700;color:#f1f5f9;margin-bottom:8px">데이터 기반 판정</div>
+    <div class="conc-pt"><span class="dot">▪</span>오후 전용(18–21시) 응답율 98.2% — 관리자 없이 전체 평균 초과</div>
+    <div class="conc-pt"><span class="dot">▪</span>관리자 필요 5개 기준 전체 미달 — 팀 규모·볼륨·품질 모두</div>
+    <div class="conc-pt"><span class="dot">▪</span>Slack 58건 중 53건(91.4%)이 09–18시 집중</div>
+    <div class="conc-pt"><span class="dot">▪</span>18시 이후 에스컬레이션 실적 0건 — 파트장 처리 가능 수준</div>
+    <div class="conc-pt"><span class="dot">▪</span>악성고객 SOP · 외부민원 가이드 이미 배포완료 — 이관 기준만 추가 정비</div>
+  </div>
+  <div class="conc-rec">
+    <div class="rec-lbl">권고 방향</div>
+    <p>
+      <strong>관리자 추가 없음.</strong> 파트장 SOP 배포 + #cx 이관 체계로 운영 안정화.<br><br>
+      처리 기준은 단순 — <strong>티켓베이 정책 + 법 위반 아닌 것은 전부 파트장 처리.</strong>
+      판단 권한 초과 케이스·법적 대응 예고는 정중 응대 후 #cx 포스팅으로 이관.
+      당일 긴급연락 없음. 부담감의 원인은 업무량이 아닌 역할 경계 모호성.
+    </p>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ── 복합 차트 (바 + 라인) ──
+const labels = ['09시','10시','11시','13시','14시','15시','16시','17시','18시','19시','20시','21시'];
+const vols   = [1030,981,1082,1741,1164,1111,1196,1071,617,435,369,333];
+const rates  = [99.2,98.6,96.2,92.2,98.9,97.7,99.2,98.1,97.1,98.4,99.2,98.8];
+const bClrs  = ['#94a3b8','#94a3b8','#94a3b8','#f59e0b','#f59e0b','#f59e0b','#f59e0b','#f59e0b','#0d9488','#0d9488','#0d9488','#0d9488'];
+const pClrs  = ['#94a3b8','#94a3b8','#94a3b8','#ef4444','#f59e0b','#f59e0b','#f59e0b','#f59e0b','#0d9488','#0d9488','#0d9488','#0d9488'];
+
+new Chart(document.getElementById('comboChart'),{
+  data:{
+    labels,
+    datasets:[
+      { type:'bar', data:vols, backgroundColor:bClrs, borderRadius:3, borderSkipped:false, yAxisID:'y', label:'인입량' },
+      { type:'line', data:rates, borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,.06)',
+        pointBackgroundColor:pClrs, pointBorderColor:pClrs, pointRadius:4,
+        tension:0.3, fill:true, yAxisID:'y2', label:'응답율' },
+      { type:'line', data:Array(12).fill(97.3), borderColor:'rgba(0,0,0,.18)', borderDash:[4,4],
+        pointRadius:0, fill:false, yAxisID:'y2', label:'평균' }
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false },
+      tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===0 ? ctx.parsed.y.toLocaleString()+'콜' : ctx.parsed.y.toFixed(1)+'%' } }
+    },
+    scales:{
+      x:{ grid:{ display:false }, ticks:{ font:{ size:9 }, color:'#94a3b8', autoSkip:false, maxRotation:0 } },
+      y:{ position:'left', grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{ size:9 }, color:'#94a3b8', callback: v=>v>=1000?(v/1000).toFixed(1)+'k':v } },
+      y2:{ position:'right', min:88, max:102, grid:{ display:false }, ticks:{ font:{ size:9 }, color:'#2563eb', callback: v=>v+'%' } }
+    }
+  }
+});
+
+// ── 관리자 필요 조건 판정 테이블 ──
+const crit = [
+  { name:'팀 규모', cur:'2–3명', thr:'8명+', pct:25, ok:false },
+  { name:'응답율', cur:'98.2%', thr:'95% 미만', pct:95, ok:false },
+  { name:'포기율', cur:'1.8%', thr:'5% 이상', pct:18, ok:false },
+  { name:'시간당 인입', cur:'17콜/시', thr:'50콜+', pct:21, ok:false },
+  { name:'일 포기호', cur:'1.2건', thr:'10건+', pct:6, ok:false },
+];
+const tb = document.getElementById('judgeBody');
+crit.forEach(c=>{
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>
+      <div class="crit-name">${c.name}</div>
+      <div class="minibr"><div class="minibr-fill" style="width:${c.pct}%;background:${c.ok?'#059669':'#ef4444'}"></div><div class="minibr-mark" style="left:60%"></div></div>
+    </td>
+    <td class="crit-thr">${c.thr}</td>
+    <td class="crit-cur">${c.cur}</td>
+    <td><span class="badge ${c.ok?'ok':'fail'}">${c.ok?'충족':'미달'}</span></td>`;
+  tb.appendChild(tr);
+});
+
+// ── 18시 이후 케이스 ──
+const cases = [
+  { time:'26-05-26 18:05', ch:'#cx', cls:'plain', tag:'평일·공지', txt:'문학경기장 우천취소 통보 — 클레임 아님' },
+  { time:'26-05-19 18:38', ch:'#cx', cls:'ok', tag:'평일·경미', txt:'회신 없는 고객 방문 여부 확인 — 1줄 문의 즉시 종결' },
+  { time:'25-09-08 18:20', ch:'#cs-hotline', cls:'ok', tag:'평일·경미', txt:'채번취소 상품번호 확인 — 1회 응답 완결, 관리자 개입 없음' },
+  { time:'26-05-16 19:42', ch:'#cx', cls:'wkd', tag:'토요일', txt:'판매자 보상요구 문의 — 비정규 근무일 발생' },
+  { time:'26-05-17 06:59', ch:'#cx', cls:'wkd', tag:'토요일 새벽', txt:'글로벌 거래건 공유 — 자율 공유, 요청 아님' },
+];
+const aw = document.getElementById('after18');
+cases.forEach(c=>{
+  const d=document.createElement('div');
+  d.className='slack-row';
+  d.innerHTML=`<span class="s-time">${c.time}</span><span class="s-ch">${c.ch}</span><span class="s-tag ${c.cls}">${c.tag}</span><span class="s-text">${c.txt}</span>`;
+  aw.appendChild(d);
+});
+</script>
+</body>
+</html>
