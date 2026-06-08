@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>운영 인력 시뮬레이터 — 평일·주말·성수기</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f8f5ee;--surface:#fff;--bg2:#f1ecdf;--ink:#1a1d23;--ink2:#3d434d;--ink3:#6d7280;
+--border:#e7e2d6;--borderSoft:#f1ecdf;--navy:#2c4a6e;--coral:#d97757;--teal:#4a9d9c;--sage:#5a8266;
+--mustard:#c89125;--danger:#c2522e;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--ink);font-family:'Inter','Noto Sans KR',sans-serif;font-size:14px;line-height:1.5;padding:28px 20px;}
+.wrap{max-width:920px;margin:0 auto;}
+.kicker{font-size:11px;font-weight:600;letter-spacing:0.08em;color:var(--coral);text-transform:uppercase;}
+h1{font-size:23px;font-weight:700;letter-spacing:-0.02em;margin:2px 0 4px;}
+.meta{font-size:12px;color:var(--ink3);margin-bottom:20px;}.meta b{color:var(--ink2);}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;}
+.card h2{font-size:14px;font-weight:600;margin-bottom:13px;}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.seg button{font-family:inherit;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--ink2);border-radius:8px;padding:7px 14px;cursor:pointer;}
+.seg button.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+.seg.season button.on{background:var(--coral);border-color:var(--coral);}
+.seglab{font-size:11px;color:var(--ink3);font-weight:600;margin:0 0 6px;letter-spacing:0.03em;}
+.p{margin-bottom:14px;}.p:last-child{margin-bottom:0;}
+.pt{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px;align-items:baseline;}
+.pl{color:var(--ink2);font-weight:500;}.pv{color:var(--ink);font-weight:700;font-size:14px;font-feature-settings:"tnum" 1;}
+.pv small{color:var(--ink3);font-weight:500;font-size:11px;}
+input[type=range]{width:100%;accent-color:var(--coral);height:5px;}
+.hint{font-size:10.5px;color:var(--ink3);margin-top:3px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}@media(max-width:680px){.grid2{grid-template-columns:1fr;}}
+.out{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
+@media(max-width:680px){.out{grid-template-columns:1fr;}}
+.o{border:1px solid var(--border);border-radius:12px;padding:14px 16px;border-top:3px solid var(--navy);}
+.o .l{font-size:11.5px;color:var(--ink3);}.o .v{font-size:27px;font-weight:700;margin-top:2px;font-feature-settings:"tnum" 1;letter-spacing:-0.02em;}
+.o .v small{font-size:13px;color:var(--ink3);font-weight:500;}.o .s{font-size:11.5px;margin-top:3px;font-weight:600;}
+.s.good{color:var(--sage);}.s.warn{color:var(--mustard);}.s.bad{color:var(--danger);}
+.verdict{border-radius:12px;padding:14px 18px;font-size:13.5px;line-height:1.65;}
+.verdict.good{background:#eef3ee;border:1px solid #cfe0d2;color:#2f4a36;}
+.verdict.warn{background:#fbf3ee;border:1px solid #ecd3c4;color:#7a4a2e;}
+.verdict.bad{background:#fbeeea;border:1px solid #ecc4b8;color:#8a2f1a;}
+.verdict b{font-weight:700;}
+.chart{position:relative;height:310px;}
+.note{font-size:11px;color:var(--ink3);background:var(--bg2);border-radius:9px;padding:11px 14px;margin-top:12px;line-height:1.65;}.note b{color:var(--ink2);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">CX OPS · 셀프 시뮬레이터 v2</div>
+  <h1>운영 인력 시뮬레이터 — 평일·주말·성수기</h1>
+  <div class="meta">기준 <b>2026-05·06 실측</b> + 성수기 배수 <b>2025 월별 실적</b> · 안정선 150건/인 · 슬라이더 즉시 갱신(오프라인 가능)</div>
+
+  <div class="card">
+    <h2>① 조건</h2>
+    <div class="seglab">요일 유형 (기본 인력·수요가 바뀜)</div>
+    <div class="seg" id="segDay"><button data-v="wd" class="on">평일</button><button data-v="we">주말</button></div>
+    <div class="seglab">성수기 배수 — 5월=1.0 기준, 2025 실적</div>
+    <div class="seg season" id="segSeason">
+      <button data-m="0.34">비수기(1·12월)</button>
+      <button data-m="0.81">평월(8월)</button>
+      <button data-m="1.0" class="on">5월</button>
+      <button data-m="0.96">6월</button>
+      <button data-m="1.085">10월 최대피크</button>
+    </div>
+    <div class="grid2" style="margin-top:4px">
+      <div>
+        <div class="p"><div class="pt"><span class="pl">일 전체건수 (수요)</span><span class="pv" id="vDem">1775<small> 건</small></span></div>
+          <input type="range" id="dem" min="600" max="3200" step="10" value="1775"><div class="hint">요일·성수기 버튼이 자동 세팅 / 직접 조정 가능</div></div>
+        <div class="p"><div class="pt"><span class="pl">베테랑(숙련) 투입</span><span class="pv" id="vVet">13<small> 명</small></span></div>
+          <input type="range" id="vet" min="0" max="22" step="1" value="13"></div>
+        <div class="p"><div class="pt"><span class="pl">단기·신규 투입</span><span class="pv" id="vTmp">2<small> 명</small></span></div>
+          <input type="range" id="tmp" min="0" max="10" step="1" value="2"></div>
+      </div>
+      <div>
+        <div class="p"><div class="pt"><span class="pl">베테랑 1인 처리능력</span><span class="pv" id="vCv">150<small> 건/일</small></span></div>
+          <input type="range" id="cv" min="100" max="180" step="5" value="150"><div class="hint">안정선=150</div></div>
+        <div class="p"><div class="pt"><span class="pl">단기·신규 1인 처리능력</span><span class="pv" id="vCt">100<small> 건/일</small></span></div>
+          <input type="range" id="ct" min="50" max="150" step="5" value="100"><div class="hint">신규는 보통 숙련의 60~75%</div></div>
+        <div class="p"><div class="pt"><span class="pl">목표 응답률</span><span class="pv" id="vTgt">98<small> %</small></span></div>
+          <input type="range" id="tgt" min="90" max="99" step="1" value="98"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>② 결과 <span id="ctx" style="font-weight:500;color:var(--ink3);font-size:12px"></span></h2>
+    <div class="out" id="out"></div>
+    <div id="verdict"></div>
+  </div>
+
+  <div class="card">
+    <h2>③ 내 시나리오 vs 실측 (5·6월 38일)</h2>
+    <div class="chart"><canvas id="ch"></canvas></div>
+    <div class="note" id="note"></div>
+  </div>
+</div>
+
+<script>
+// 5월(31)+6월(7) 실측: 부하·응답률·요일유형
+const ACT=[
+[204,99.4,'wd','5/1'],[381,94.6,'we','5/2'],[303,93.8,'we','5/3'],[115,98.7,'wd','5/4'],[184,93.8,'wd','5/5'],[80,99.2,'wd','5/6'],[91,99.5,'wd','5/7'],
+[118,99.2,'wd','5/8'],[219,99.3,'we','5/9'],[156,98.5,'we','5/10'],[97,99.4,'wd','5/11'],[155,98.3,'wd','5/12'],[139,98.1,'wd','5/13'],[110,99.5,'wd','5/14'],
+[113,98.8,'wd','5/15'],[258,92.1,'we','5/16'],[216,88.0,'we','5/17'],[84,99.2,'wd','5/18'],[79,99.7,'wd','5/19'],[120,100,'wd','5/20'],[109,99.0,'wd','5/21'],
+[120,98.5,'wd','5/22'],[228,97.0,'we','5/23'],[176,88.8,'we','5/24'],[106,99.0,'wd','5/25'],[98,99.2,'wd','5/26'],[111,99.6,'wd','5/27'],[109,98.8,'wd','5/28'],
+[121,97.0,'wd','5/29'],[238,96.3,'we','5/30'],[189,93.3,'we','5/31'],
+[77,99.8,'wd','6/1'],[99,99.3,'wd','6/2'],[151,96.9,'wd','6/3'],[84,98.7,'wd','6/4'],[76,93.8,'wd','6/5'],[170,99.2,'we','6/6'],[126,99.5,'we','6/7']];
+const STAB=150,CEIL=99,K=13.9,BAND=4.5,BASE=1775;
+const DEF={wd:{dem:1775,vet:13,tmp:2},we:{dem:1775,vet:6,tmp:2}};
+const C={navy:'#2c4a6e',coral:'#d97757',sage:'#5a8266',danger:'#c2522e',ink3:'#6d7280',border:'#e7e2d6',borderSoft:'#f1ecdf'};
+const $=id=>document.getElementById(id);
+let dayType='wd', season=1.0;
+function rate(Q,Cap){if(Cap<=0)return 0;const u=Q/Cap;return u<=1?CEIL:Math.max(70,CEIL-K*(1-1/u));}
+let ch;
+
+function calc(){
+  const Q=+$('dem').value,vet=+$('vet').value,tmp=+$('tmp').value,cv=+$('cv').value,ct=+$('ct').value,tgt=+$('tgt').value;
+  $('vDem').innerHTML=Q.toLocaleString('ko-KR')+'<small> 건</small>';$('vVet').innerHTML=vet+'<small> 명</small>';
+  $('vTmp').innerHTML=tmp+'<small> 명</small>';$('vCv').innerHTML=cv+'<small> 건/일</small>';
+  $('vCt').innerHTML=ct+'<small> 건/일</small>';$('vTgt').innerHTML=tgt+'<small> %</small>';
+  $('ctx').textContent='· '+(dayType==='wd'?'평일':'주말')+' · 성수기배수 '+season+'x';
+
+  const head=vet+tmp, cap=vet*cv+tmp*ct, load=head>0?Q/head:0, est=rate(Q,cap);
+  const lo=Math.max(70,est-BAND),hi=Math.min(99.5,est+BAND);
+  const avgCap=head>0?cap/head:cv;
+  let needHead;
+  if(tgt>=CEIL){needHead=Math.ceil(Q/avgCap);}
+  else{const inv=1-(CEIL-tgt)/K;const uN=inv>0?1/inv:99;needHead=Math.ceil((Q/uN)/avgCap);}
+
+  const loadCls=load<=STAB?'good':(load<=STAB*1.25?'warn':'bad');
+  const rateCls=est>=98?'good':(est>=95?'warn':'bad');
+  $('out').innerHTML=`
+    <div class="o"><div class="l">평균 인당부하</div><div class="v">${load.toFixed(0)}<small> 건</small></div>
+      <div class="s ${loadCls}">${load<=STAB?'안정선 이하 ✓':'안정선 '+(load/STAB).toFixed(2)+'배'}</div></div>
+    <div class="o" style="border-top-color:var(--coral)"><div class="l">예상 응답률</div><div class="v">${est.toFixed(1)}<small> %</small></div>
+      <div class="s ${rateCls}">범위 ${lo.toFixed(0)}~${hi.toFixed(0)}% (스킬편차)</div></div>
+    <div class="o" style="border-top-color:var(--sage)"><div class="l">필요 인원 (목표 ${tgt}%)</div><div class="v">${needHead}<small> 명</small></div>
+      <div class="s ${head>=needHead?'good':'bad'}">현재 ${head}명 · ${head>=needHead?'충족 ✓':(needHead-head)+'명 부족'}</div></div>`;
+
+  let vc,vt;
+  if(est>=98&&load<=STAB){vc='good';vt=`<b>충분.</b> 부하 ${load.toFixed(0)}건(안정선 이하), 예상 응답률 ${est.toFixed(1)}%. 이 구성 유지.`;}
+  else if(est>=95){vc='warn';vt=`<b>부분 회복.</b> 부하 ${load.toFixed(0)}건, 응답률 ${est.toFixed(1)}%대. 최악일은 막지만 목표 ${tgt}%엔 미달 — 총 <b>${needHead}명</b> 필요(현 ${head}명).`;}
+  else{vc='bad';vt=`<b>부족.</b> 부하 ${load.toFixed(0)}건(안정선 ${(load/STAB).toFixed(2)}배), 응답률 ${est.toFixed(1)}%대. 목표 ${tgt}%엔 총 <b>${needHead}명</b>(+${Math.max(0,needHead-head)}명).`;}
+  $('verdict').innerHTML=`<div class="verdict ${vc}">${vt}</div>`;
+  draw(load,est);
+  $('note').innerHTML=`<b>점 색 ·</b> 남색=평일 · 주황=주말 · 빨강마름모=내 시나리오. <b>부하와 응답률은 직선관계가 아님</b> — 6/5(평일 부하76·93.8%)와 6/6(주말 부하170·99.2%)처럼 부하 외 변수(스킬·시간집중)가 큼. 그래서 응답률은 ±${BAND}%p 범위로 보고, <b>확실한 건 부하</b>(안정선 이하인지)로 판단하세요. 시간대 데이터 없어 일 단위 평균 기준.`;
+}
+function draw(load,est){
+  const curve=[];for(let L=60;L<=400;L+=10){const u=L/STAB;curve.push({x:L,y:u<=1?CEIL:Math.max(70,CEIL-K*(1-1/u))});}
+  const wd=ACT.filter(a=>a[2]==='wd'),we=ACT.filter(a=>a[2]==='we');
+  const data={datasets:[
+    {type:'line',label:'모델 곡선',data:curve,borderColor:C.ink3,borderDash:[5,4],borderWidth:1.3,pointRadius:0,tension:0.3,order:4},
+    {type:'scatter',label:'평일 실측',data:wd.map(a=>({x:a[0],y:a[1],d:a[3]})),backgroundColor:C.navy,pointRadius:4,order:2},
+    {type:'scatter',label:'주말 실측',data:we.map(a=>({x:a[0],y:a[1],d:a[3]})),backgroundColor:C.coral,pointRadius:4,order:2},
+    {type:'scatter',label:'내 시나리오',data:[{x:load,y:est}],backgroundColor:C.danger,pointStyle:'rectRot',pointRadius:10,order:1}]};
+  const opts={maintainAspectRatio:false,
+    plugins:{legend:{labels:{usePointStyle:true,boxWidth:8,padding:11}},
+      tooltip:{callbacks:{label:c=>c.raw.d?`${c.raw.d} 부하${c.raw.x} 응답${c.raw.y}%`:`부하 ${c.raw.x.toFixed(0)} → ${c.raw.y.toFixed(1)}%`}}},
+    scales:{x:{type:'linear',title:{display:true,text:'인당부하 (건/인·일)'},grid:{color:C.borderSoft},min:60,max:400},
+      y:{title:{display:true,text:'응답률 %'},grid:{color:C.borderSoft},min:85,max:101}}};
+  const stab={id:'stab',afterDraw:c=>{const{ctx,chartArea:a,scales}=c;const xp=scales.x.getPixelForValue(STAB);
+    ctx.save();ctx.strokeStyle=C.danger;ctx.setLineDash([5,4]);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(xp,a.top);ctx.lineTo(xp,a.bottom);ctx.stroke();
+    ctx.fillStyle=C.danger;ctx.font='600 11px Inter';ctx.fillText('안정선 150',xp+5,a.top+14);ctx.restore();}};
+  if(ch){ch.data=data;ch.update();}else ch=new Chart($('ch'),{data,options:opts,plugins:[stab]});
+}
+function applyDefaults(){const d=DEF[dayType];$('dem').value=Math.round(BASE*season);$('vet').value=d.vet;$('tmp').value=d.tmp;calc();}
+$('segDay').addEventListener('click',e=>{if(e.target.dataset.v){dayType=e.target.dataset.v;
+  [...$('segDay').children].forEach(b=>b.classList.toggle('on',b===e.target));applyDefaults();}});
+$('segSeason').addEventListener('click',e=>{if(e.target.dataset.m){season=+e.target.dataset.m;
+  [...$('segSeason').children].forEach(b=>b.classList.toggle('on',b===e.target));$('dem').value=Math.round(BASE*season);calc();}});
+['dem','vet','tmp','cv','ct','tgt'].forEach(id=>$(id).addEventListener('input',calc));
+calc();
+</script>
+</body>
+</html>
