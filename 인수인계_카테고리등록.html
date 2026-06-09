@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>티켓베이 카테고리 등록 인수인계</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    background: #f0f2f5;
+    color: #1a1a2e;
+    padding: 40px 20px;
+  }
+  .container { max-width: 860px; margin: 0 auto; }
+
+  /* 표지 */
+  .cover {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    border-radius: 20px;
+    padding: 60px 40px;
+    text-align: center;
+    color: white;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(229,57,53,0.15) 0%, transparent 60%);
+    animation: pulse 4s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+  .cover .badge {
+    display: inline-block;
+    background: #e53935;
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 16px;
+    border-radius: 20px;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .cover h1 {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.3;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .cover p {
+    font-size: 15px;
+    opacity: 0.7;
+    position: relative;
+  }
+  .cover .system-tag {
+    margin-top: 24px;
+    display: inline-block;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 13px;
+    position: relative;
+  }
+
+  /* 섹션 카드 */
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #e53935;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 36px 0 12px;
+  }
+
+  /* 카드 */
+  .card {
+    background: white;
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .step-num {
+    width: 36px; height: 36px;
+    background: #e53935;
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 800;
+    flex-shrink: 0;
+  }
+  .step-num.blue { background: #1565c0; }
+  .card-title { font-size: 17px; font-weight: 700; }
+  .card-sub { font-size: 13px; color: #888; margin-top: 2px; }
+
+  /* 개요 플로우 */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+  }
+  .flow-item {
+    background: white;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+  }
+  .flow-arrow { color: #ccc; font-size: 16px; }
+
+  /* 필드 테이블 */
+  .field-table { width: 100%; border-collapse: collapse; }
+  .field-table tr { border-bottom: 1px solid #f0f0f0; }
+  .field-table tr:last-child { border-bottom: none; }
+  .field-table td { padding: 10px 4px; font-size: 14px; vertical-align: top; }
+  .field-label {
+    width: 140px;
+    color: #888;
+    font-size: 13px;
+    padding-right: 16px;
+    white-space: nowrap;
+  }
+  .field-value { color: #1a1a2e; font-weight: 500; }
+  .field-value .highlight {
+    background: #fff3e0;
+    border: 1px solid #ffcc80;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 13px;
+    margin-right: 4px;
+    display: inline-block;
+  }
+  .field-value .tag {
+    background: #e8f5e9;
+    border: 1px solid #a5d6a7;
+    color: #2e7d32;
+    border-radius: 4px;
+    padding: 1px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: 4px;
+    display: inline-block;
+  }
+  .field-value .tag.red {
+    background: #fce4ec;
+    border-color: #f48fb1;
+    color: #c62828;
+  }
+
+  /* 참고 소스 박스 */
+  .source-box {
+    background: #f3f4f6;
+    border-left: 4px solid #1565c0;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: #444;
+  }
+  .source-box strong { color: #1565c0; }
+
+  /* 주의사항 */
+  .warning-box {
+    background: #fff8e1;
+    border: 1.5px solid #ffe082;
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-size: 14px;
+    color: #5d4037;
+    margin-top: 8px;
+  }
+  .warning-box ul { padding-left: 18px; }
+  .warning-box li { margin-bottom: 6px; line-height: 1.6; }
+
+  /* 예시 케이스 구분 */
+  .case-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .case-badge.case1 { background: #fce4ec; color: #c62828; }
+  .case-badge.case2 { background: #e3f2fd; color: #1565c0; }
+
+  /* 공연정보 박스 */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .info-item {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+  .info-item .info-label { font-size: 11px; color: #aaa; font-weight: 600; margin-bottom: 3px; }
+  .info-item .info-val { font-size: 14px; font-weight: 600; color: #1a1a2e; }
+
+  /* 최종 저장 박스 */
+  .save-box {
+    background: linear-gradient(135deg, #e53935, #b71c1c);
+    border-radius: 12px;
+    padding: 20px 24px;
+    color: white;
+    text-align: center;
+    margin-top: 16px;
+  }
+  .save-box .save-icon { font-size: 28px; margin-bottom: 6px; }
+  .save-box p { font-size: 14px; opacity: 0.9; margin-top: 4px; }
+
+  /* 구분선 */
+  .divider {
+    border: none;
+    border-top: 2px dashed #e0e0e0;
+    margin: 8px 0 20px;
+  }
+
+  @media (max-width: 600px) {
+    .info-grid { grid-template-columns: 1fr; }
+    .cover h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- 표지 -->
+  <div class="cover">
+    <div class="badge">HANDOVER DOCUMENT</div>
+    <h1>티켓베이 카테고리 등록<br>업무 인수인계</h1>
+    <p>상품관리 &gt; 카테고리 목록 &gt; 카테고리 등록</p>
+    <div class="system-tag">🔗 re-adm.ticketbay.co.kr</div>
+  </div>
+
+  <!-- 전체 흐름 -->
+  <div class="section-title">OVERVIEW</div>
+  <div class="card">
+    <div class="card-header">
+      <div style="font-size:22px">🗺️</div>
+      <div>
+        <div class="card-title">전체 작업 흐름</div>
+        <div class="card-sub">카테고리 등록 시 아래 순서로 진행합니다</div>
+      </div>
+    </div>
+    <div class="flow">
+      <div class="flow-item">① 공연 정보 확인</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item">② 기존 카테고리 검색</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item">③ 카테고리 등록 폼 작성</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item">④ 저장</div>
+    </div>
+    <div class="source-box">
+      <strong>공연 정보 참고 사이트:</strong>&nbsp; 멜론티켓 (ticket.melon.com) · 인터파크티켓 (tickets.interpark.com) · 기타 예매사 페이지에서 공연 제목, 공연기간, 공연장소, 공연시간 확인
+    </div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="section-title">STEP 1 — 공연 정보 확인</div>
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num blue">1</div>
+      <div>
+        <div class="card-title">예매사 페이지에서 공연 정보 수집</div>
+        <div class="card-sub">등록 전 반드시 원본 공연 페이지를 확인하세요</div>
+      </div>
+    </div>
+    <p style="font-size:14px;color:#555;margin-bottom:14px;">카테고리명·공연기간·공연시간·공연장 정보를 정확히 복사해두어야 이후 폼 작성 시 오류가 없습니다.</p>
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">수집 항목</div>
+        <div class="info-val">공연 제목 (국문)</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">수집 항목</div>
+        <div class="info-val">공연 기간 (날짜 + 시간)</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">수집 항목</div>
+        <div class="info-val">공연장 지역 (시/도 단위)</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">수집 항목</div>
+        <div class="info-val">공연 회차별 시작 시간</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="section-title">STEP 2 — 기존 카테고리 검색 확인</div>
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num blue">2</div>
+      <div>
+        <div class="card-title">사용여부 "미사용" 필터로 아티스트 검색</div>
+        <div class="card-sub">상품관리 → 카테고리 목록</div>
+      </div>
+    </div>
+    <table class="field-table">
+      <tr>
+        <td class="field-label">접속 경로</td>
+        <td class="field-value">티켓베이 어드민 → 상품 관리 → 카테고리 목록</td>
+      </tr>
+      <tr>
+        <td class="field-label">① 필터 변경</td>
+        <td class="field-value">상단 필터에서 <span class="highlight">사용여부 → 미사용</span> 선택</td>
+      </tr>
+      <tr>
+        <td class="field-label">② 아티스트 검색</td>
+        <td class="field-value">카테고리 검색창에 아티스트명 입력 후 검색</td>
+      </tr>
+      <tr>
+        <td class="field-label">③ 결과에 따라</td>
+        <td class="field-value">
+          <div style="margin-bottom:10px;">
+            <span class="tag">기존 카테고리 있는 경우</span><br>
+            해당 카테고리 클릭 후 아래 항목 변경 → 저장
+            <div style="margin-top:6px;padding:10px 12px;background:#f8f9fa;border-radius:8px;font-size:13px;line-height:2;">
+              · <strong>사용여부</strong> → <span class="highlight">사용</span> 으로 변경<br>
+              · 해외 공연인 경우 <strong>해외 전시 유무</strong> → <span class="highlight">사용</span> 으로 변경
+            </div>
+          </div>
+          <div>
+            <span class="tag red">없는 경우</span><br>
+            STEP 3으로 이동하여 신규 등록
+          </div>
+        </td>
+      </tr>
+    </table>
+    <div class="warning-box" style="margin-top:14px;">
+      ⚠️ 반드시 <strong>"미사용" 필터</strong>로 먼저 검색하세요. 기존에 등록된 카테고리가 미사용 상태로 숨어있을 수 있습니다. 중복 등록 방지!
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="section-title">STEP 3 — 카테고리 등록 폼 작성</div>
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num">3</div>
+      <div>
+        <div class="card-title">+ 등록 버튼 클릭 후 폼 작성</div>
+        <div class="card-sub">상단 우측 "+ 등록" 버튼</div>
+      </div>
+    </div>
+
+    <!-- 케이스 1 -->
+    <div class="case-badge case1">예시 ① — P1Harmony (피원하모니) 팬미팅</div>
+    <table class="field-table">
+      <tr>
+        <td class="field-label">카테고리</td>
+        <td class="field-value"><span class="highlight">콘서트</span> / <span class="highlight">피원하모니 (P1Harmony)</span></td>
+      </tr>
+      <tr>
+        <td class="field-label">카테고리명 국문</td>
+        <td class="field-value">피원하모니 2026 - 고양 <span style="font-size:12px;color:#999">← 아티스트명 + 연도 + 공연지역</span></td>
+      </tr>
+      <tr>
+        <td class="field-label">카테고리명 영/중/일문</td>
+        <td class="field-value">
+          <span class="tag red">국내 공연</span> - (하이픈 입력)<br>
+          <span class="tag" style="margin-top:4px;display:inline-block;">해외 공연</span> 영어로 모두 입력
+        </td>
+      </tr>
+      <tr>
+        <td class="field-label">사용유무</td>
+        <td class="field-value"><span class="tag">사용</span></td>
+      </tr>
+      <tr>
+        <td class="field-label">해외 전시 유무</td>
+        <td class="field-value">
+          <span class="tag red">국내 공연</span> 미사용<br>
+          <span class="tag" style="margin-top:4px;display:inline-block;">해외 공연</span> 사용
+        </td>
+      </tr>
+      <tr>
+        <td class="field-label">카테고리 세부구분</td>
+        <td class="field-value"><span class="highlight">B</span></td>
+      </tr>
+      <tr>
+        <td class="field-label">공연기간 상세</td>
+        <td class="field-value">
+          <span class="highlight">2026-07-11 18:00:00</span>
+          <span class="highlight">2026-07-12 16:00:00</span>
+          <div style="font-size:12px;color:#999;margin-top:4px">회차별로 날짜+시간 각각 "+ 추가"</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="field-label">상세설명</td>
+        <td class="field-value">공연 제목 + 공연기간 텍스트 기입<br><span style="font-size:12px;color:#999">예) 2026 P1Harmony FAN MEETING [P1uspace H : Horror Haven]<br>2026.07.11 ~ 2026.07.12</span></td>
+      </tr>
+    </table>
+
+    <hr class="divider">
+
+    <!-- 케이스 2 -->
+    <div class="case-badge case2">예시 ② — 82MAJOR 팬 콘서트</div>
+    <table class="field-table">
+      <tr>
+        <td class="field-label">카테고리</td>
+        <td class="field-value"><span class="highlight">콘서트</span> / <span class="highlight">82MAJOR</span></td>
+      </tr>
+      <tr>
+        <td class="field-label">카테고리명 국문</td>
+        <td class="field-value">82MAJOR 2026 - 서울 <span style="font-size:12px;color:#999">← 아티스트명 + 연도 + 공연지역</span></td>
+      </tr>
+      <tr>
+        <td class="field-label">카테고리명 영/중/일문</td>
+        <td class="field-value">
+          <span class="tag red">국내 공연</span> - (하이픈 입력)<br>
+          <span class="tag" style="margin-top:4px;display:inline-block;">해외 공연</span> 영어로 모두 입력
+        </td>
+      </tr>
+      <tr>
+        <td class="field-label">사용유무</td>
+        <td class="field-value"><span class="tag">사용</span></td>
+      </tr>
+      <tr>
+        <td class="field-label">해외 전시 유무</td>
+        <td class="field-value">
+          <span class="tag red">국내 공연</span> 미사용<br>
+          <span class="tag" style="margin-top:4px;display:inline-block;">해외 공연</span> 사용
+        </td>
+      </tr>
+      <tr>
+        <td class="field-label">카테고리 세부구분</td>
+        <td class="field-value"><span class="highlight">B</span></td>
+      </tr>
+      <tr>
+        <td class="field-label">공연기간 상세</td>
+        <td class="field-value">
+          <span class="highlight">2026-07-18 14:00:00</span>
+          <span class="highlight">2026-07-18 19:00:00</span>
+          <div style="font-size:12px;color:#999;margin-top:4px">동일 날짜 2회차인 경우 시간 각각 추가</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="field-label">공연장</td>
+        <td class="field-value">XSCALA(엑스칼라), 서울특별시 중구</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 카테고리명 작성 규칙 -->
+  <div class="section-title">카테고리명 작성 규칙</div>
+  <div class="card">
+    <div class="card-header">
+      <div style="font-size:22px">📝</div>
+      <div>
+        <div class="card-title">국문 카테고리명 네이밍 패턴</div>
+      </div>
+    </div>
+    <div style="background:#f8f9fa;border-radius:10px;padding:16px 20px;font-size:15px;font-weight:700;text-align:center;letter-spacing:1px;color:#1a1a2e;margin-bottom:14px;">
+      아티스트명 + 연도 + " - " + 공연지역
+    </div>
+    <table class="field-table">
+      <tr>
+        <td class="field-label">공연지역</td>
+        <td class="field-value">공연장 소재 도시명 사용 (고양, 서울, 부산 등)</td>
+      </tr>
+      <tr>
+        <td class="field-label">아티스트명</td>
+        <td class="field-value">국문 표기 우선, 영문 아티스트는 영문 그대로 사용</td>
+      </tr>
+      <tr>
+        <td class="field-label">영/중/일문명</td>
+        <td class="field-value">입력란에 하이픈(-) 한 글자만 입력 (필수 입력 필드)</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- STEP 4 저장 -->
+  <div class="section-title">STEP 4 — 저장</div>
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num">4</div>
+      <div>
+        <div class="card-title">우측 하단 "저장" 버튼 클릭</div>
+      </div>
+    </div>
+    <div class="save-box">
+      <div class="save-icon">💾</div>
+      <strong style="font-size:16px;">우측 하단 파란색 "저장" 버튼</strong>
+      <p>저장 후 카테고리 목록으로 자동 이동됩니다</p>
+    </div>
+  </div>
+
+  <!-- STEP 5 좌석 등록 -->
+  <div class="section-title">STEP 5 — 좌석 등록 ⭐ 가장 중요</div>
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num">5</div>
+      <div>
+        <div class="card-title">좌석 설정 팝업에서 등급·위치·구역 등록</div>
+        <div class="card-sub">카테고리 목록 → 해당 카테고리 "좌석설정" 버튼 클릭</div>
+      </div>
+    </div>
+
+    <div class="source-box" style="margin-bottom:16px;">
+      <strong>진입 방법:</strong> 카테고리 저장 후 목록에서 해당 카테고리의 <strong>좌석설정</strong> 버튼 클릭 → 팝업 창으로 열림<br>
+      <span style="font-size:12px;color:#888;">URL 예시: re-adm.ticketbay.co.kr/product/category/seat/{id}?popup=true</span>
+    </div>
+
+    <!-- 팝업 구조 설명 -->
+    <div style="background:#f8f9fa;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:10px;">팝업 화면 구성 (4개 컬럼)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;text-align:center;">
+        <div style="background:#e53935;color:white;border-radius:8px;padding:10px 6px;font-size:13px;font-weight:700;">① 등급<br><span style="font-size:11px;font-weight:400;opacity:0.9;">티켓 등급명</span></div>
+        <div style="background:#1565c0;color:white;border-radius:8px;padding:10px 6px;font-size:13px;font-weight:700;">② 적용<br><span style="font-size:11px;font-weight:400;opacity:0.9;">가격 입력</span></div>
+        <div style="background:#2e7d32;color:white;border-radius:8px;padding:10px 6px;font-size:13px;font-weight:700;">③ 위치<br><span style="font-size:11px;font-weight:400;opacity:0.9;">좌석 유형</span></div>
+        <div style="background:#6a1b9a;color:white;border-radius:8px;padding:10px 6px;font-size:13px;font-weight:700;">④ 구역<br><span style="font-size:11px;font-weight:400;opacity:0.9;">세부 구역명</span></div>
+      </div>
+    </div>
+
+    <!-- 작업 순서 -->
+    <table class="field-table">
+      <tr>
+        <td class="field-label" style="color:#e53935;font-weight:700;">① 등급 검색</td>
+        <td class="field-value">
+          예매사 페이지의 티켓 등급명을 검색창에 입력 → 검색<br>
+          <span style="font-size:12px;color:#999;">예) VACCINE ZONE, 선예매, 일반예매, VIP-SOUND CHECK 등</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="field-label" style="color:#1565c0;font-weight:700;">② 적용 + 가격</td>
+        <td class="field-value">
+          해당 등급 체크박스 선택 → 오른쪽 가격란에 금액 입력<br>
+          <span style="font-size:12px;color:#999;">예) PANDEMONIUM ZONE: 121000 / VACCINE ZONE: 121000</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="field-label" style="color:#2e7d32;font-weight:700;">③ 위치 검색</td>
+        <td class="field-value">
+          좌석 유형 검색 (예매사 좌석 배치도 참고)<br>
+          <span style="font-size:12px;color:#999;">예) floor → 플로어 스탠딩석 / 계단식 → 계단식 좌석(tiered seats)</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="field-label" style="color:#6a1b9a;font-weight:700;">④ 구역 선택</td>
+        <td class="field-value">
+          구역 검색창에 구역명 입력 후 체크박스 선택<br>
+          <span style="font-size:12px;color:#999;">예) P1, P2, P3... / 1구역, COME, BACK, HOME 등<br>공연 좌석배치도와 비교하며 해당 구역 모두 체크</span>
+        </td>
+      </tr>
+    </table>
+
+    <hr class="divider">
+
+    <!-- 예시 -->
+    <div class="case-badge case1">예시 ① — P1Harmony (피원하모니 2026 - 고양)</div>
+    <table class="field-table">
+      <tr>
+        <td class="field-label">등급</td>
+        <td class="field-value"><span class="highlight">PANDEMONIUM ZONE</span> 121,000원 &nbsp; <span class="highlight">VACCINE ZONE</span> 121,000원</td>
+      </tr>
+      <tr>
+        <td class="field-label">위치</td>
+        <td class="field-value">플로어 스탠딩석 / 계단식 좌석(tiered seats) — 검색어로 조회</td>
+      </tr>
+      <tr>
+        <td class="field-label">구역</td>
+        <td class="field-value">P1, P2, P3, P4, P5, P6, P7, P8 등 공연 배치도 기준 구역 체크</td>
+      </tr>
+    </table>
+
+    <hr class="divider">
+
+    <div class="case-badge case2">예시 ② — 82MAJOR (82MAJOR 2026 - 서울)</div>
+    <table class="field-table">
+      <tr>
+        <td class="field-label">등급</td>
+        <td class="field-value">
+          <span class="highlight">선예매</span> 99,000원 &nbsp; <span class="highlight">일반예매</span> 110,000원<br>
+          <span style="font-size:12px;color:#999;">VIP-GROUP PHOTO, VIP-SOUND CHECK, FLOOR석, 스탠딩 GA1/GA2 등 해당 공연 등급 모두 등록</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="field-label">위치</td>
+        <td class="field-value">플로어 스탠딩석 / 공연 유형에 맞는 위치 선택</td>
+      </tr>
+      <tr>
+        <td class="field-label">구역</td>
+        <td class="field-value">1구역, COME, BACK, HOME, STANDING E 등 배치도 기준</td>
+      </tr>
+    </table>
+
+    <div class="save-box" style="margin-top:16px;">
+      <div class="save-icon">💾</div>
+      <strong style="font-size:16px;">우측 상단 "저장" 버튼으로 좌석 등록 완료</strong>
+      <p>저장 후 팝업 창을 닫으면 됩니다</p>
+    </div>
+
+    <div class="warning-box" style="margin-top:12px;">
+      <ul>
+        <li>예매사 공연 페이지의 <strong>좌석 배치도 이미지</strong>를 반드시 참고하여 구역을 매핑하세요.</li>
+        <li>등급명은 예매사 표기 기준으로 검색 — 일부 약어로도 검색 가능 (예: "floor", "p1", "예매" 등)</li>
+        <li>구역이 없는 경우 하단 <strong>한글명 / 영문명 입력 후 "등록"</strong> 버튼으로 신규 추가할 수 있습니다.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 주의사항 -->
+  <div class="section-title">주의사항</div>
+  <div class="card">
+    <div class="warning-box">
+      <ul>
+        <li>공연기간 상세는 <strong>회차별 시작 시간 기준</strong>으로 등록하세요. 종료 시간이 아닙니다.</li>
+        <li>카테고리 세부구분은 <strong>B</strong>로 고정합니다. (기존 케이스 참고)</li>
+        <li>영문·중문·일문 카테고리명 필드는 비워두지 말고 <strong>하이픈(-)</strong>을 입력하세요.</li>
+        <li>해외 공연이 아닌 경우 해외 전시 유무는 항상 <strong>미사용</strong>으로 설정합니다.</li>
+        <li>동일 아티스트의 기존 카테고리가 있을 경우, 2Depth 선택창에서 기존 아티스트 선택 후 신규 공연만 추가합니다.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="text-align:center;font-size:12px;color:#bbb;padding:24px 0 8px;">
+    티켓베이 CS운영팀 업무 인수인계 문서 · 2026
+  </div>
+
+</div>
+</body>
+</html>
