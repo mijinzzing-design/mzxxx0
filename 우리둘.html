@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>우리 둘</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.5/tesseract.min.js"></script>
+<style>
+:root{
+  --bg:#FFF4EC;--card:#FFFDF9;--ink:#2B2320;--ink2:#5C4F49;--mute:#9A8B84;--line:#2B2320;
+  --me:#FF8FA3;--me-soft:#FFE1E7;--you:#7FC8E8;--you-soft:#DDF1FA;--mint:#B8ECD0;--lemon:#FFE58A;--warn:#E5484D;--ok:#2E9E6B;
+  --r:26px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 ui-rounded,"Apple SD Gothic Neo","Pretendard Variable",Pretendard,"Malgun Gothic",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{background-image:radial-gradient(#FFD9CB 1.4px,transparent 1.6px);background-size:22px 22px}
+main{max-width:640px;margin:0 auto;padding:26px 16px 100px}
+.hero{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+.seal{width:64px;height:64px;border-radius:50%;background:var(--lemon);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);display:flex;align-items:center;justify-content:center;transform:rotate(-6deg);flex:none}
+h1{font-size:30px;font-weight:900;letter-spacing:-.02em;margin:0;line-height:1.1}
+h2{font-size:16px;font-weight:900;margin:0 0 10px}
+p{margin:6px 0}
+.mute{color:var(--mute);font-size:13px}
+.me{color:#E0405F}.you{color:#2E8FBF}
+.num{font-variant-numeric:tabular-nums}
+button,select,textarea,input{font:inherit}
+button{background:var(--ink);color:#fff;border:3px solid var(--ink);border-radius:999px;padding:10px 20px;cursor:pointer;font-weight:900;box-shadow:3px 3px 0 var(--ink);background:var(--me);color:var(--ink);transition:transform .08s}
+button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+button.ghost{background:#fff}
+button.sm{padding:6px 14px;font-size:13px}
+button:disabled{opacity:.45;cursor:default}
+:focus-visible{outline:3px solid var(--you);outline-offset:2px}
+.card{background:var(--card);border:3px solid var(--ink);border-radius:var(--r);padding:16px 18px;box-shadow:5px 5px 0 var(--ink)}
+.stack>*+*{margin-top:12px}
+.hide{display:none!important}
+
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.mode{background:#fff;border:3px solid var(--ink);border-radius:22px;padding:16px;cursor:pointer;text-align:left;box-shadow:4px 4px 0 var(--ink);color:var(--ink);display:block;width:100%}
+.mode.on{background:var(--mint)}
+.mode b{display:block;font-size:16px;margin-bottom:2px;font-weight:900}
+.mode span{font-size:12.5px;color:var(--ink2);font-weight:500}
+.drop{display:block;border:3px dashed var(--ink);border-radius:22px;padding:28px 16px;text-align:center;background:#fff;cursor:pointer;font-weight:700;box-shadow:4px 4px 0 var(--ink)}
+.drop.on{background:var(--you-soft)}
+.drop input{display:none}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.thumbs img{height:88px;border-radius:14px;border:3px solid var(--ink);object-fit:cover;box-shadow:3px 3px 0 var(--ink)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+select,input[type=text]{padding:8px 14px;border:3px solid var(--ink);border-radius:999px;background:#fff;font-weight:700}
+.seg{display:inline-flex;border:3px solid var(--ink);border-radius:999px;overflow:hidden;background:#fff}
+.seg button{background:#fff;color:var(--ink);border:0;border-radius:0;padding:8px 14px;box-shadow:none}
+.seg button.on{background:var(--ink);color:#fff}
+.seg button:active{transform:none}
+.prog{height:12px;background:#fff;border:3px solid var(--ink);border-radius:999px;overflow:hidden;margin-top:10px}
+.prog i{display:block;height:100%;background:var(--me);width:0;transition:width .3s}
+
+.duo{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin:26px 0 12px}
+.duo .n{display:flex;align-items:center;gap:8px;font-size:20px;font-weight:900}
+.duo .n.you{justify-content:flex-end;text-align:right}
+.duo .face{width:44px;height:44px;border-radius:50%;border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);flex:none;display:flex;align-items:center;justify-content:center;font-size:20px}
+.duo .n.me .face{background:var(--me)}.duo .n.you .face{background:var(--you)}
+.duo .vs{font-size:12px;font-weight:900;background:var(--lemon);border:3px solid var(--ink);border-radius:999px;padding:4px 10px;box-shadow:2px 2px 0 var(--ink)}
+.duo small{display:block;font-size:12px;color:var(--mute);font-weight:700}
+
+.pairs{margin-top:6px}
+.pair{padding:11px 0;border-top:2px dashed #E9D7CE}
+.pair:first-child{border-top:0}
+.pair .lab{font-size:13.5px;color:var(--ink2);margin-bottom:6px;font-weight:700}
+.pair .track{position:relative;height:26px;border-radius:999px;background:#fff;border:3px solid var(--ink);overflow:hidden}
+.pair .track i{position:absolute;top:0;height:100%}
+.pair .track .l{left:0;background:var(--me)}
+.pair .track .r{right:0;background:var(--you)}
+.pair .track .mid{left:50%;width:3px;background:var(--ink);margin-left:-1px}
+.pair .v{display:flex;justify-content:space-between;font-size:14px;font-weight:900;margin-top:5px}
+.pair.skew .lab::after{content:" ⚠︎ 한쪽에 쏠림";color:var(--warn)}
+
+.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 10px;margin-top:20px;display:flex;gap:8px;overflow:auto}
+.tabs button{background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:999px;padding:6px 14px;font-size:13px;white-space:nowrap;box-shadow:2px 2px 0 var(--ink)}
+.tabs button.on{background:var(--ink);color:#fff}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kpi{background:#fff;border:3px solid var(--ink);border-radius:20px;padding:10px 12px;box-shadow:3px 3px 0 var(--ink)}
+.kpi b{display:block;font-size:19px;font-weight:900;letter-spacing:-.02em;line-height:1.2}
+.kpi span{font-size:12px;color:var(--mute);font-weight:700}
+canvas{background:#fff;border:3px solid var(--ink);border-radius:22px;padding:10px;margin-top:10px;box-shadow:4px 4px 0 var(--ink)}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;background:#fff;border:3px solid var(--ink);border-radius:18px;overflow:hidden}
+th,td{padding:8px 10px;text-align:left;border-top:2px solid #EFE3DC}
+th{border-top:0;color:var(--ink2);font-weight:900;background:var(--lemon)}
+tr.clk{cursor:pointer}tr.clk:hover td{background:var(--you-soft)}
+td.r,th.r{text-align:right}
+.tag{display:inline-block;font-size:11px;padding:2px 9px;border-radius:999px;background:#FFF;border:2px solid var(--ink);color:var(--ink);margin-left:6px;font-weight:900}
+.tag.ok{background:var(--mint)}.tag.no{background:var(--me-soft)}
+ul.msgs{list-style:none;padding:0;margin:6px 0 0;font-size:13px}
+ul.msgs li{padding:6px 0;border-top:2px dashed #EFE3DC}
+ul.msgs li b{font-weight:900;margin-right:6px}
+textarea{width:100%;min-height:130px;border:3px solid var(--ink);border-radius:20px;padding:12px 14px;font:13px/1.5 inherit;background:#fff;resize:vertical}
+.note{background:var(--lemon);border:3px solid var(--ink);border-radius:18px;padding:10px 14px;font-size:13px;color:var(--ink);box-shadow:3px 3px 0 var(--ink);font-weight:600}
+.bubble{display:flex;margin:5px 0}
+.bubble span{max-width:78%;padding:7px 12px;border-radius:18px;font-size:13px;line-height:1.45;border:2.5px solid var(--ink);font-weight:600}
+.bubble.l{justify-content:flex-start}.bubble.l span{background:var(--you-soft);border-bottom-left-radius:4px}
+.bubble.r{justify-content:flex-end}.bubble.r span{background:var(--me-soft);border-bottom-right-radius:4px}
+.bubble small{display:block;font-size:10px;color:var(--mute);font-weight:700}
+@media (max-width:480px){.modes{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}h1{font-size:26px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.judge{margin-top:12px}
+.judge .who{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.judge .box{background:#fff;border:3px solid var(--ink);border-radius:20px;padding:12px 14px;box-shadow:3px 3px 0 var(--ink)}
+.judge .box.me{background:var(--me-soft)}.judge .box.you{background:var(--you-soft)}
+.judge .box h4{margin:0 0 6px;font-size:14px;font-weight:900}
+.judge ul{margin:0;padding-left:18px;font-size:13px;font-weight:600}
+.judge li{margin:4px 0}
+.judge .sum{font-size:14px;font-weight:700;line-height:1.55}
+.judge .lbl{font-size:11px;font-weight:900;color:var(--mute);margin:8px 0 2px}
+@media (max-width:480px){.judge .who{grid-template-columns:1fr}}
+.bubble span{cursor:pointer}
+.bubble span:hover{outline:3px solid var(--lemon)}
+.bubble.trunc span::after{content:" ⋯ 전체보기?";font-size:10px;color:var(--warn);font-weight:900}
+.edit{background:#fff;border:3px solid var(--ink);border-radius:18px;padding:10px;margin:6px 0;box-shadow:3px 3px 0 var(--ink)}
+.edit textarea{min-height:90px;margin-bottom:8px}
+</style>
+
+</head>
+<body>
+<main>
+  <div class="hero">
+    <div class="seal"><svg width="34" height="30" viewBox="0 0 34 30" aria-hidden="true"><path d="M17 27C9 21 2 16 2 9.5 2 5 5.5 2 9.5 2c3 0 5.5 1.7 7.5 4.5C19 3.7 21.5 2 24.5 2 28.5 2 32 5 32 9.5 32 16 25 21 17 27Z" fill="#FF8FA3" stroke="#2B2320" stroke-width="2.5" stroke-linejoin="round"/><circle cx="12" cy="11" r="1.6" fill="#2B2320"/><circle cx="22" cy="11" r="1.6" fill="#2B2320"/><path d="M14 15.5q3 2.5 6 0" stroke="#2B2320" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+    <div><h1>우리 둘</h1><p class="mute" style="margin:2px 0 0;font-weight:700">싸울 때 둘이 각각 뭘 반복하는지 봐요. 누가 맞았는지는 안 세요.</p></div>
+  </div>
+
+
+  <!-- 입력 -->
+  <section id="input">
+    <div class="modes">
+      <button class="mode on" data-m="shot"><b>캡처로</b><span>대화 화면 스크린샷을 순서대로 올리면 글자를 읽어서 정리합니다</span></button>
+      <button class="mode" data-m="file"><b>내보내기 파일로</b><span>카카오톡 대화 내보내기 .txt. 몇 년치도 한 번에</span></button>
+    </div>
+
+    <div id="mShot" class="stack" style="margin-top:12px">
+      <label class="drop" id="dropShot">
+        <input type="file" id="shot" accept="image/*" multiple>
+        <div>캡처를 여기에 놓거나 눌러서 선택</div>
+        <div class="mute">여러 장이면 대화 순서대로. 같은 날 대화로 묶입니다</div>
+      </label>
+      <div class="thumbs" id="thumbs"></div>
+      <div class="row hide" id="shotRow">
+        <span>내 말풍선은</span>
+        <div class="seg" id="sideSeg"><button data-s="right" class="on">오른쪽</button><button data-s="left">왼쪽</button></div>
+        <span>상대 이름</span><input id="youName" type="text" placeholder="예: 남편" style="padding:8px 12px;border:1px solid var(--line);border-radius:10px;width:110px">
+        <button id="readShots">읽기</button>
+      </div>
+      <div class="prog hide" id="prog"><i></i></div>
+      <div id="readOut" class="card hide"></div>
+    </div>
+
+    <div id="mFile" class="stack hide" style="margin-top:12px">
+      <label class="drop" id="dropFile">
+        <input type="file" id="file" accept=".txt,text/plain">
+        <div>.txt 파일을 여기에 놓거나 눌러서 선택</div>
+        <div class="mute" id="fstat">카카오톡 대화방 → 메뉴 → 대화 내보내기 → 텍스트. 파일은 이 브라우저 밖으로 나가지 않습니다</div>
+      </label>
+      <div class="row hide" id="fileRow">
+        <span>나는</span><select id="whoSel"></select>
+        <button id="runFile">분석</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 결과: 캡처(단일 대화) -->
+  <section id="single" class="hide"></section>
+
+  <!-- 결과: 전체 -->
+  <section id="full" class="hide">
+    <div class="duo">
+      <div class="n me"><span class="face">🙂</span><span id="nMe">나</span></div>
+      <div class="vs">갈등일 안에서</div>
+      <div class="n you"><span id="nYou">상대</span><span class="face">🙃</span></div>
+    </div>
+    <div class="card pairs" id="pairs"></div>
+
+    <div class="tabs">
+      <button class="on" data-t="tOver">전체</button>
+      <button data-t="tYear">해마다</button>
+      <button data-t="tDays">갈등일</button>
+      <button data-t="tPaste">이 대화만</button>
+      <button data-t="tHow">보는 법</button>
+    </div>
+
+    <div id="tOver" class="stack"><div class="kpis" id="kpis"></div></div>
+    <div id="tYear" class="stack hide"><canvas id="cConf" height="170"></canvas><canvas id="cAff" height="170"></canvas><canvas id="cLat" height="170"></canvas></div>
+    <div id="tDays" class="stack hide">
+      <p class="mute">밀도 = 갈등 표현 수 ÷ 그날 메시지 수. 줄을 누르면 그날 안에서 뭐가 반복됐는지 보입니다.</p>
+      <div style="overflow:auto"><table id="tbl"><thead><tr><th>날짜</th><th class="r">메시지</th><th class="r">밀도</th><th>먼저 사과</th><th>마지막 사과</th><th class="r">그만하자</th><th class="r">다시 엶</th></tr></thead><tbody></tbody></table></div>
+      <div id="dayDetail" class="card hide"></div>
+    </div>
+    <div id="tPaste" class="stack hide">
+      <p class="mute">지금 오간 대화를 텍스트로 붙여넣으면 이 대화만 봅니다. "오후 03:52, 이름 : 내용" 형식.</p>
+      <textarea id="paste"></textarea>
+      <div class="row"><button id="runPaste">이 대화 보기</button></div>
+      <div id="pasteOut" class="card hide"></div>
+    </div>
+    <div id="tHow" class="stack hide">
+      <div class="note"><b>먼저 사과 · 마지막 사과</b><br>먼저가 한쪽, 마지막이 반대쪽으로 쏠리면 한 사람이 열고 한 사람이 닫는 구조입니다. 빨리 끝나지만 요구가 다뤄질 자리가 없습니다.</div>
+      <div class="note"><b>구체적 약속</b><br>"안 그럴게 / 조심할게 / 노력할게"는 약속으로 세지 않습니다. 상황·시점·행동이 든 문장만 셉니다. 이 비율이 낮으면 사과로 닫기만 하고 바뀌는 게 없는 상태입니다.</div>
+      <div class="note"><b>그만하자 · 다시 엶</b><br>"그만하자"보다 "다시 엶"이 많으면 종료 신호가 기능하지 않는 상태입니다. 누가 더 많이 다시 열었는지 보세요.</div>
+      <div class="note"><b>요구 · 닫는 말</b><br>한쪽은 "~해줘"를 반복하고 다른 쪽은 "이미 사과했잖아"를 반복하면, 둘이 서로 다른 질문에 답하고 있는 겁니다. 한쪽은 앞으로를, 다른 쪽은 지난 일을.</div>
+    </div>
+  </section>
+</main>
+
+<script>
+var shots=[];
+// ================= 사전 =================
+const K = {
+  conf: /감정소비|지긋지긋|이딴|그만하자|하지말자|그만해|헤어지|이혼|억울|존중|상처|실망|서운|예민|사과|미안|너무해|이해가 안|이해를 못|싸우|싸움|화내|화났|속상|답답|짜증/,
+  apol: /미안|사과할게|사과해|내가 잘못|잘못했/,
+  stop: /그만하자|하지말자|그만해|그만얘기|그만 얘기|더 말 ?안|더이상 얘기|나중에 얘기|나중에 연락|대화할 마음/,
+  blame: /내가 잘못|내 잘못|내가 너무|내가 예민|내가 그랬|내탓|내 탓/,
+  aff: /❤|사랑|보고싶|보고시|좋아해|고마워|공주|이뽀|예뻐|귀여/,
+  promise: /다음부턴|다음부터|다음엔|앞으로|안 ?그럴게|안 ?할게|하지 ?않을게|고칠게|조심할게|신경 ?쓸게|노력할게/,
+  specific: /전에|미리|하기 전|물어보|말하고|얘기하고|얘기할게|말할게|공유|문자|연락할게|물어볼게/,
+  demand: /해줘|해 줘|해주면|해달라|말해줘|알려줘|물어봐 ?줘/,
+  closedTalk: /이미 사과|끝난 얘기|끝났잖아|저번주에|다 얘기했|언제까지|또 꺼내|넘어가/,
+  question: /\?|냐$|니$|건데$|거야$/
+};
+
+// ================= 파싱 =================
+const dateRe=/^(\d{4})년 (\d{1,2})월 (\d{1,2})일/, msgRe=/^(오전|오후) (\d{1,2}):(\d{2}), (.+?) : (.*)$/;
+function parse(text){
+  const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/); const msgs=[]; let cur=null;
+  for(const raw of lines){
+    let m=dateRe.exec(raw); if(m){cur=[+m[1],+m[2]-1,+m[3]];continue;}
+    m=msgRe.exec(raw);
+    if(m&&cur){const h=(+m[2])%12+(m[1]==='오후'?12:0);msgs.push({t:new Date(cur[0],cur[1],cur[2],h,+m[3]).getTime(),who:m[4],x:m[5]});}
+    else if(msgs.length&&raw.trim()) msgs[msgs.length-1].x+='\n'+raw;
+  }
+  return msgs;
+}
+function parsePaste(text){
+  const d=new Date(),msgs=[];
+  for(const raw of text.split(/\r?\n/)){
+    const m=msgRe.exec(raw);
+    if(m){const h=(+m[2])%12+(m[1]==='오후'?12:0);msgs.push({t:new Date(d.getFullYear(),d.getMonth(),d.getDate(),h,+m[3]).getTime(),who:m[4],x:m[5]});}
+    else if(msgs.length&&raw.trim()) msgs[msgs.length-1].x+='\n'+raw;
+  }
+  return msgs;
+}
+const dayKey=t=>{const d=new Date(t);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+const year=t=>new Date(t).getFullYear();
+
+// ================= 분석 =================
+function analyzeSeg(key,seg,me){
+  const isMe=m=>m.who===me, cnt=(arr,f)=>arr.reduce((a,m)=>a+(f(m)?1:0),0);
+  const conf=seg.filter(m=>K.conf.test(m.x)); const t0=conf.length?conf[0].t:seg[0].t;
+  const apol=seg.filter(m=>m.t>=t0&&K.apol.test(m.x)); const stops=seg.filter(m=>K.stop.test(m.x));
+  let reMe=0,reYou=0; for(let i=0;i<seg.length-1;i++) if(K.stop.test(seg[i].x)&&seg[i+1].who!==seg[i].who) (isMe(seg[i+1])?reMe++:reYou++);
+  const prom=seg.filter(m=>K.promise.test(m.x)&&m.x.length>=4&&!K.demand.test(m.x));
+  let run=0,maxMe=0,maxYou=0,prev=null; for(const m of seg){run=(m.who===prev)?run+1:1;prev=m.who;isMe(m)?maxMe=Math.max(maxMe,run):maxYou=Math.max(maxYou,run);}
+  return {key,year:year(seg[0].t),n:seg.length,r:conf.length,ratio:conf.length/seg.length,
+    firstConf:conf.length?(isMe(conf[0])?'me':'you'):null, firstApol:apol.length?(isMe(apol[0])?'me':'you'):null, lastApol:apol.length?(isMe(apol[apol.length-1])?'me':'you'):null,
+    minToApol:apol.length?Math.round((apol[0].t-t0)/60000):null,
+    apolMe:cnt(apol,isMe),apolYou:cnt(apol,m=>!isMe(m)), stopMe:cnt(stops,isMe),stopYou:cnt(stops,m=>!isMe(m)), reMe,reYou,
+    blameMe:cnt(seg,m=>isMe(m)&&K.blame.test(m.x)),blameYou:cnt(seg,m=>!isMe(m)&&K.blame.test(m.x)),
+    promMe:cnt(prom,isMe),promYou:cnt(prom,m=>!isMe(m)), promSpecMe:cnt(prom,m=>isMe(m)&&K.specific.test(m.x)),promSpecYou:cnt(prom,m=>!isMe(m)&&K.specific.test(m.x)),
+    promList:prom.map(m=>({who:isMe(m)?'me':'you',x:m.x,spec:K.specific.test(m.x)})),
+    demandMe:cnt(seg,m=>isMe(m)&&K.demand.test(m.x)),demandYou:cnt(seg,m=>!isMe(m)&&K.demand.test(m.x)),
+    closedMe:cnt(seg,m=>isMe(m)&&K.closedTalk.test(m.x)),closedYou:cnt(seg,m=>!isMe(m)&&K.closedTalk.test(m.x)),
+    qMe:cnt(seg,m=>isMe(m)&&K.question.test(m.x.trim())),qYou:cnt(seg,m=>!isMe(m)&&K.question.test(m.x.trim())), maxMe,maxYou,
+    lenMe:seg.filter(isMe).reduce((a,m)=>a+m.x.replace(/\s/g,'').length,0),lenYou:seg.filter(m=>!isMe(m)).reduce((a,m)=>a+m.x.replace(/\s/g,'').length,0),
+    nMe:cnt(seg,isMe),nYou:cnt(seg,m=>!isMe(m)),seg,meName:me};
+}
+function conflictDays(msgs,me){
+  const by={}; for(const m of msgs){const k=dayKey(m.t);(by[k]||(by[k]=[])).push(m);}
+  const out=[];
+  for(const k in by){const seg=by[k];let r=0,a=0,b=0;for(const m of seg)if(K.conf.test(m.x)){r++;m.who===me?a++:b++;}
+    if(r>=8&&r/seg.length>=.02&&a>=2&&b>=2)out.push(analyzeSeg(k,seg,me));}
+  return out.sort((x,y)=>x.key<y.key?-1:1);
+}
+function yearly(msgs,days,me){
+  const Y={};
+  for(const m of msgs){const y=year(m.t);const o=Y[y]||(Y[y]={n:0,nMe:0,nYou:0,affMe:0,affYou:0,days:new Set()});o.n++;o.days.add(dayKey(m.t));
+    if(m.who===me){o.nMe++;if(K.aff.test(m.x))o.affMe++;}else{o.nYou++;if(K.aff.test(m.x))o.affYou++;}}
+  for(const y in Y){const o=Y[y];o.conf=days.filter(d=>d.year==y);o.confN=o.conf.length;o.density=o.confN?o.conf.reduce((a,d)=>a+d.ratio,0)/o.confN:0;
+    const lat=o.conf.map(d=>d.minToApol).filter(v=>v!=null).sort((a,b)=>a-b);o.lat=lat.length?lat[Math.floor(lat.length/2)]:null;}
+  return Y;
+}
+
+// ================= 렌더 공통 =================
+const $=s=>document.querySelector(s), fmt=n=>n.toLocaleString('ko-KR');
+function pair(label,a,b,unit=''){
+  const tot=a+b||1, l=a/tot*100, skew=(a+b>=6)&&(Math.max(a,b)/tot>=.68);
+  return `<div class="pair${skew?' skew':''}"><div class="lab">${label}</div>
+  <div class="track"><i class="l" style="width:${l}%"></i><i class="r" style="width:${100-l}%"></i><i class="mid"></i></div>
+  <div class="v num"><span class="me">${fmt(a)}${unit}</span><span class="you">${fmt(b)}${unit}</span></div></div>`;
+}
+function pairsHtml(days,you){
+  const S=f=>days.reduce((a,d)=>a+f(d),0);
+  const specMe=S(d=>d.promSpecMe),promMe=S(d=>d.promMe),specYou=S(d=>d.promSpecYou),promYou=S(d=>d.promYou);
+  const dayU=days.length>1?'일':'';
+  return [
+    pair('갈등 표현을 먼저 꺼냄',S(d=>d.firstConf==='me'),S(d=>d.firstConf==='you'),dayU),
+    pair('먼저 사과',S(d=>d.firstApol==='me'),S(d=>d.firstApol==='you'),dayU),
+    pair('마지막 사과 — 닫는 사람',S(d=>d.lastApol==='me'),S(d=>d.lastApol==='you'),dayU),
+    pair('사과한 횟수',S(d=>d.apolMe),S(d=>d.apolYou)),
+    pair('자책 — "내가 잘못" "내가 예민"',S(d=>d.blameMe),S(d=>d.blameYou)),
+    pair('"그만하자"',S(d=>d.stopMe),S(d=>d.stopYou)),
+    pair('그만하자 뒤에 다시 엶',S(d=>d.reMe),S(d=>d.reYou)),
+    pair('요구 — "~해줘"',S(d=>d.demandMe),S(d=>d.demandYou)),
+    pair('닫는 말 — "이미 사과했다" "끝난 얘기"',S(d=>d.closedMe),S(d=>d.closedYou)),
+    pair(`구체적 약속 비율 (나 ${specMe}/${promMe}, ${you} ${specYou}/${promYou})`,promMe?Math.round(specMe/promMe*100):0,promYou?Math.round(specYou/promYou*100):0,'%')
+  ].join('');
+}
+function dayHtml(d,you,title){
+  const who=v=>v==='me'?'<span class="me">나</span>':`<span class="you">${you}</span>`, bal=(a,b)=>`<span class="me">${a}</span> / <span class="you">${b}</span>`;
+  const li=d.promList.map(p=>`<li><b class="${p.who}">${p.who==='me'?'나':you}</b>${p.x.replace(/\n/g,' ').slice(0,90)}<span class="tag ${p.spec?'ok':'no'}">${p.spec?'행동 있음':'막연함'}</span></li>`).join('');
+  const notes=[];
+  if(d.demandMe+d.demandYou>0&&d.closedMe+d.closedYou>0) notes.push(`한쪽은 요구를 ${d.demandMe+d.demandYou}회, 다른 쪽은 닫는 말을 ${d.closedMe+d.closedYou}회 반복했습니다. 서로 다른 질문에 답하고 있을 가능성이 큽니다.`);
+  if((d.stopMe+d.stopYou)>0&&(d.reMe+d.reYou)>=(d.stopMe+d.stopYou)*.6) notes.push(`"그만하자" ${d.stopMe+d.stopYou}회, 다시 연 게 ${d.reMe+d.reYou}회. 종료 신호가 기능하지 않았습니다.`);
+  if(d.promList.length&&!d.promList.some(p=>p.spec)) notes.push(`약속 문장 ${d.promList.length}개가 모두 막연합니다. "안 그럴게"는 그 상황이 왔을 때 떠오르지 않습니다.`);
+  if(d.maxYou>=6||d.maxMe>=6) notes.push(`연속 발화 최대 ${Math.max(d.maxMe,d.maxYou)}개. 한 사람이 쉬지 않고 이어 보낸 구간이 있습니다.`);
+  return `<h2>${title}</h2>
+  <p class="mute">메시지 ${d.n}건 (${bal(d.nMe,d.nYou)}) · 글자수 ${bal(fmt(d.lenMe),fmt(d.lenYou))} · 밀도 ${d.ratio.toFixed(3)}</p>
+  <table><tbody>
+  <tr><td>먼저 갈등 표현</td><td>${d.firstConf?who(d.firstConf):'—'}</td></tr>
+  <tr><td>먼저 사과 · 걸린 시간</td><td>${d.firstApol?who(d.firstApol)+' · '+d.minToApol+'분':'사과 없음'}</td></tr>
+  <tr><td>마지막 사과</td><td>${d.lastApol?who(d.lastApol):'—'}</td></tr>
+  <tr><td>사과 횟수</td><td>${bal(d.apolMe,d.apolYou)}</td></tr>
+  <tr><td>요구 "~해줘"</td><td>${bal(d.demandMe,d.demandYou)}</td></tr>
+  <tr><td>닫는 말 "이미 사과했다 / 끝난 얘기"</td><td>${bal(d.closedMe,d.closedYou)}</td></tr>
+  <tr><td>질문 형태</td><td>${bal(d.qMe,d.qYou)}</td></tr>
+  <tr><td>연속 발화 최대</td><td>${bal(d.maxMe,d.maxYou)}</td></tr>
+  <tr><td>그만하자 · 다시 엶</td><td>${bal(d.stopMe,d.stopYou)} · ${bal(d.reMe,d.reYou)}</td></tr>
+  <tr><td>자책</td><td>${bal(d.blameMe,d.blameYou)}</td></tr>
+  </tbody></table>
+  <p style="margin-top:12px"><b>약속 문장</b> <span class="mute">상황·시점·행동이 든 것만 "행동 있음"</span></p>
+  <ul class="msgs">${li||'<li class="mute">약속 문장 없음</li>'}</ul>
+  ${notes.map(n=>`<div class="note" style="margin-top:8px">${n}</div>`).join('')}
+  <div class="judge"><p class="lbl" style="margin-top:14px">이 대화 전에 있었던 일 <span class="mute" style="font-weight:600">(선택) 내 입장에서 써도 돼요. 대화 내용과 안 맞는 부분이 있으면 그것도 짚어요.</span></p>
+  <textarea class="ctx" placeholder="예: 저저번주에 같은 일로 얘기했고 안 그러겠다고 했는데, 이번에 또 그래서 얘기를 꺼냈어" style="min-height:80px"></textarea>
+  <div class="row" style="margin-top:10px"><button class="sm" data-judge="${d.key}">판결</button><span class="mute">감정 빼고 행위만. 양쪽 같은 기준</span></div><div class="jOut"></div></div>`;
+}
+
+// ================= 전체 파일 결과 =================
+let msgs=[],names=[],me='',charts=[];
+function renderFull(){
+  charts.forEach(c=>c.destroy());charts=[];
+  const you=names.find(n=>n!==me)||'상대';
+  const days=conflictDays(msgs,me), Y=yearly(msgs,days,me), ys=Object.keys(Y).sort();
+  const nMe=msgs.filter(m=>m.who===me).length, nYou=msgs.length-nMe, active=new Set(msgs.map(m=>dayKey(m.t))).size, last=days[days.length-1];
+  $('#nMe').innerHTML=`나<small>${fmt(nMe)}건</small>`; $('#nYou').innerHTML=`${you}<small>${fmt(nYou)}건</small>`;
+  $('#pairs').innerHTML=pairsHtml(days,you);
+  $('#kpis').innerHTML=[[fmt(msgs.length),'메시지'],[`${fmt(active)}일`,'대화한 날'],[`${days.length}일`,`갈등일 · ${(days.length/active*100).toFixed(1)}%`],
+    [last?last.key:'—',last?`최근 갈등일 · 밀도 ${last.ratio.toFixed(3)}`:'갈등일 없음'],[`${dayKey(msgs[0].t)}`,'첫 메시지'],[`${dayKey(msgs[msgs.length-1].t)}`,'마지막 메시지']]
+    .map(([b,s])=>`<div class="kpi"><b class="num">${b}</b><span>${s}</span></div>`).join('');
+  const base={responsive:true,plugins:{legend:{labels:{boxWidth:10,font:{size:11}}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,ticks:{font:{size:11}}}}};
+  const mk=(id,cfg)=>charts.push(new Chart($(id),cfg));
+  mk('#cConf',{type:'bar',data:{labels:ys,datasets:[{label:'갈등일 수',data:ys.map(y=>Y[y].confN),backgroundColor:'#FF8FA3',borderColor:'#2B2320',borderWidth:2,yAxisID:'y'},{label:'갈등일 평균 밀도',data:ys.map(y=>+Y[y].density.toFixed(3)),type:'line',borderColor:'#2B2320',backgroundColor:'#2B2320',yAxisID:'y1',tension:.25}]},
+    options:{...base,scales:{...base.scales,y1:{position:'right',beginAtZero:true,grid:{display:false},ticks:{font:{size:11}}}},plugins:{...base.plugins,title:{display:true,text:'갈등 빈도와 밀도',font:{size:12}}}}});
+  mk('#cAff',{type:'line',data:{labels:ys,datasets:[{label:'나',data:ys.map(y=>+(Y[y].affMe/Y[y].nMe*100).toFixed(1)),borderColor:'#FF8FA3',backgroundColor:'#FF8FA3',borderWidth:3,tension:.25},{label:you,data:ys.map(y=>+(Y[y].affYou/Y[y].nYou*100).toFixed(1)),borderColor:'#7FC8E8',backgroundColor:'#7FC8E8',borderWidth:3,tension:.25}]},
+    options:{...base,plugins:{...base.plugins,title:{display:true,text:'애정 표현이 든 메시지 비율 (%)',font:{size:12}}}}});
+  mk('#cLat',{type:'bar',data:{labels:ys,datasets:[{label:'갈등 시작 → 첫 사과 (분, 중앙값)',data:ys.map(y=>Y[y].lat),backgroundColor:'#B8ECD0',borderColor:'#2B2320',borderWidth:2}]},
+    options:{...base,plugins:{...base.plugins,title:{display:true,text:'갈등이 시작되고 누군가 먼저 사과하기까지',font:{size:12}}}}});
+  const tb=$('#tbl tbody');tb.innerHTML='';
+  const who=v=>v==='me'?'<span class="me">나</span>':v==='you'?`<span class="you">${you}</span>`:'—';
+  days.slice().reverse().forEach(d=>{const tr=document.createElement('tr');tr.className='clk';
+    tr.innerHTML=`<td>${d.key}</td><td class="r num">${d.n}</td><td class="r num">${d.ratio.toFixed(3)}</td><td>${who(d.firstApol)}</td><td>${who(d.lastApol)}</td><td class="r num">${d.stopMe+d.stopYou}</td><td class="r num">${d.reMe+d.reYou}</td>`;
+    tr.onclick=()=>{registerDay(d);const el=$('#dayDetail');el.innerHTML=dayHtml(d,you,d.key);el.classList.remove('hide');el.scrollIntoView({behavior:'smooth',block:'nearest'});};tb.appendChild(tr);});
+  $('#single').classList.add('hide'); $('#full').classList.remove('hide'); $('#full').scrollIntoView({behavior:'smooth'});
+}
+
+// ================= 캡처 읽기 (브라우저 OCR) =================
+var _worker=null;
+async function getWorker(onp){
+  if(_worker)return _worker;
+  if(typeof Tesseract==='undefined')throw new Error('글자 읽기 모듈을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');
+  try{_worker=await Tesseract.createWorker('kor+eng',1,{logger:m=>{if(m.status==='recognizing text'&&onp)onp(m.progress);}});}
+  catch(e){if(/Worker|blob|origin|Security/i.test(String(e)))throw new Error('여기(미리보기)에서는 캡처 읽기가 막혀 있어요. 파일을 내려받아 열거나 GitHub Pages에 올리면 돼요. 내보내기 파일 분석과 판결은 여기서도 돼요.');throw e;}
+  return _worker;
+}
+const timeRe=/(오전|오후)\s*(\d{1,2}):(\d{2})|\b(\d{1,2}):(\d{2})\b/;
+async function readShot(file,onp){
+  const w=await getWorker(onp);
+  const url=URL.createObjectURL(file);
+  const img=await new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=url;});
+  const {data}=await w.recognize(img);
+  const W=img.naturalWidth;
+  // 줄 단위: 위치로 좌우, 시각 분리
+  const lines=(data.lines||[]).map(l=>({t:l.text.trim(),x0:l.bbox.x0,x1:l.bbox.x1,y:l.bbox.y0,h:l.bbox.y1-l.bbox.y0})).filter(l=>l.t);
+  const out=[];let cur=null,pendingTime=null;
+  const junk=/^(오전|오후)?\s*\d{1,2}:\d{2}\s*$|^\d{1,2}:\d{2}\s*(오전|오후)?$|^[\d.:%\s]+$|^전송$|^메시지를 입력|^\+?\s*$|^Between$|^KakaoTalk$/;
+  for(const l of lines){
+    let t=l.t;let time=null;
+    const tm=timeRe.exec(t);
+    if(tm){const h=tm[1]?((+tm[2])%12+(tm[1]==='오후'?12:0)):+tm[4];const mi=tm[1]?+tm[3]:+tm[5];time=`${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}`;t=t.replace(timeRe,'').trim();}
+    if(!t||junk.test(t)){if(time){if(cur&&!cur.time)cur.time=time;else pendingTime=time;}continue;}
+    const cx=(l.x0+l.x1)/2, side=cx>W*0.5?'right':'left';
+    // 같은 풍선 이어짐: 같은 쪽 + 세로 간격 작음
+    if(cur&&cur.side===side&&l.y-cur.yEnd<l.h*0.9){cur.text+=' '+t;cur.yEnd=l.y+l.h;if(time&&!cur.time)cur.time=time;}
+    else{cur={side,text:t,time:time||pendingTime,yEnd:l.y+l.h};pendingTime=null;out.push(cur);}
+  }
+  URL.revokeObjectURL(url);
+  return out.map(o=>({side:o.side,time:o.time,text:o.text}));
+}
+
+async function readAll(){
+  const btn=$('#readShots');btn.disabled=true;const prog=$('#prog');prog.classList.remove('hide');const bar=prog.querySelector('i');
+  try{await getWorker();}catch(e){btn.disabled=false;prog.classList.add('hide');const o=$('#readOut');o.classList.remove('hide');o.innerHTML=`<p class="mute">${escapeHtml(e.message)}</p>`;return;}
+  const mySide=$('#sideSeg .on').dataset.s, you=($('#youName').value||'상대').trim();
+  const d=new Date(); let lastMin=null; const all=[]; let failed=0; let lastErr='';
+  for(let i=0;i<shots.length;i++){
+    try{
+      const arr=await readShot(shots[i],p=>{bar.style.width=`${((i+p)/shots.length)*100}%`;});
+      for(const m of arr){
+        let min=lastMin??0;
+        if(m.time&&/^\d{1,2}:\d{2}$/.test(m.time)){const [h,mm]=m.time.split(':').map(Number);const v=h*60+mm;if(lastMin!=null&&v<lastMin-60)min=lastMin;else min=v;lastMin=min;}
+        all.push({t:new Date(d.getFullYear(),d.getMonth(),d.getDate(),Math.floor(min/60),min%60).getTime(),who:m.side===mySide?'나':you,x:String(m.text||''),side:m.side});
+      }
+    }catch(e){failed++;lastErr=e.message;console.error(e);}
+    bar.style.width=`${(i+1)/shots.length*100}%`;
+  }
+  btn.disabled=false;
+  const out=$('#readOut');out.classList.remove('hide');
+  if(!all.length){out.innerHTML=`<p class="mute">읽지 못했습니다. ${escapeHtml(lastErr||'캡처가 선명한지, 말풍선이 보이는지 확인해 주세요.')}</p>`;return;}
+  window._all=all; window._you=you;
+  renderRead(all,you,failed);
+}
+function renderRead(all,you,failed){
+  const out=$('#readOut');
+  const trunc=x=>/…$|\.\.\.$|전체보기|더 ?보기$/.test(x.trim())||x.trim().length>=110;
+  out.innerHTML=`<h2>읽은 대화 <span class="tag">${all.length}건${failed?` · ${failed}장 실패`:''}</span></h2>
+  <p class="mute">말풍선을 누르면 고칠 수 있어요. "전체보기"로 잘린 긴 글은 원문을 붙여 넣으세요. 좌우가 틀린 것도 여기서 바꿔요.</p>
+  <div style="max-height:340px;overflow:auto;padding:4px 2px" id="readList">${all.map((m,i)=>`<div class="bubble ${m.side==='left'?'l':'r'}${trunc(m.x)?' trunc':''}" data-i="${i}"><span>${escapeHtml(m.x)}<small>${escapeHtml(m.who)} · ${hhmm(m.t)}</small></span></div>`).join('')}</div>
+  <div class="row" style="margin-top:10px"><button id="goSingle">이 대화 보기</button><button class="ghost sm" id="addMsg">빠진 말 추가</button></div>`;
+  out.querySelectorAll('.bubble').forEach(b=>b.onclick=()=>editBubble(+b.dataset.i));
+  $('#addMsg').onclick=()=>{const last=all[all.length-1];all.push({t:last?last.t:Date.now(),who:you,x:'',side:'left'});renderRead(all,you,0);editBubble(all.length-1);};
+  $('#goSingle').onclick=()=>{
+    const cleaned=all.filter(m=>m.x.trim());
+    const dd=analyzeSeg('shot',cleaned,'나');registerDay(dd);
+    const sec=$('#single');
+    sec.innerHTML=`<div class="duo"><div class="n me"><span class="face">🙂</span><span>나<small>${dd.nMe}건</small></span></div><div class="vs">이 대화에서</div><div class="n you"><span>${you}<small>${dd.nYou}건</small></span><span class="face">🙃</span></div></div>
+      <div class="card pairs">${pairsHtml([dd],you)}</div>
+      <div class="card" style="margin-top:10px">${dayHtml(dd,you,'자세히').replace('data-judge=','data-you="'+you.replace(/"/g,'')+'" data-judge=')}</div>`;
+    sec.classList.remove('hide');$('#full').classList.add('hide');sec.scrollIntoView({behavior:'smooth'});
+  };
+}
+const hhmm=t=>`${String(new Date(t).getHours()).padStart(2,'0')}:${String(new Date(t).getMinutes()).padStart(2,'0')}`;
+function editBubble(i){
+  const all=window._all,you=window._you,m=all[i];
+  const b=document.querySelector(`#readList .bubble[data-i="${i}"]`);if(!b)return;
+  const mySide=$('#sideSeg .on').dataset.s;
+  const box=document.createElement('div');box.className='edit';
+  box.innerHTML=`<textarea>${escapeHtml(m.x)}</textarea>
+    <div class="row"><div class="seg"><button data-s="left" class="${m.side==='left'?'on':''}">왼쪽</button><button data-s="right" class="${m.side==='right'?'on':''}">오른쪽</button></div>
+    <input type="text" value="${hhmm(m.t)}" style="width:80px;padding:6px 10px" aria-label="시각">
+    <button class="sm">확인</button><button class="ghost sm">삭제</button></div>`;
+  b.replaceWith(box);
+  const seg=box.querySelector('.seg');seg.querySelectorAll('button').forEach(x=>x.onclick=()=>seg.querySelectorAll('button').forEach(y=>y.classList.toggle('on',y===x)));
+  const [ok,del]=box.querySelectorAll('.row > button');
+  ok.onclick=()=>{m.x=box.querySelector('textarea').value;m.side=seg.querySelector('.on').dataset.s;m.who=m.side===mySide?'나':you;
+    const tm=/^(\d{1,2}):(\d{2})$/.exec(box.querySelector('input').value.trim());if(tm){const d=new Date(m.t);d.setHours(+tm[1],+tm[2]);m.t=d.getTime();}
+    renderRead(all,you,0);};
+  del.onclick=()=>{all.splice(i,1);renderRead(all,you,0);};
+  box.querySelector('textarea').focus();
+}
+function escapeHtml(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+// ================= AI 판정 =================
+const JUDGE={};
+function registerDay(d){JUDGE[d.key]=d;}
+function judge(d,you,btn,out,ctx){
+  const seg=d.seg, meN=d.meName;
+  const isMe=m=>m.who===meN, nm=m=>isMe(m)?'나':you, T=m=>hhmm(m.t), Q=m=>m.x.replace(/\n/g,' ').slice(0,60);
+  const facts=[], wr={me:[],you:[]}, mit={me:[],you:[]}, imp={me:new Set(),you:new Set()}; let score={me:0,you:0};
+  const side=m=>isMe(m)?'me':'you';
+  // 사실
+  const conf=seg.filter(m=>K.conf.test(m.x)); if(conf.length)facts.push(`${T(conf[0])} ${nm(conf[0])}: "${Q(conf[0])}" — 갈등 표현 시작`);
+  const ap=seg.filter(m=>K.apol.test(m.x)); if(ap.length){facts.push(`${T(ap[0])} ${nm(ap[0])}: "${Q(ap[0])}" — 첫 사과`);}
+  const dem=seg.filter(m=>K.demand.test(m.x)); if(dem.length)facts.push(`${T(dem[0])} ${nm(dem[0])}: "${Q(dem[0])}" — 요구 (이후 ${dem.length}회)`);
+  const cl=seg.filter(m=>K.closedTalk.test(m.x)); if(cl.length)facts.push(`${T(cl[0])} ${nm(cl[0])}: "${Q(cl[0])}" — 종결 주장 (이후 ${cl.length}회)`);
+  const st=seg.filter(m=>K.stop.test(m.x)); if(st.length)facts.push(`${T(st[0])} ${nm(st[0])}: "${Q(st[0])}" — 첫 종료 제안`);
+  const last=seg[seg.length-1]; facts.push(`${T(last)} ${nm(last)}: "${Q(last)}" — 마지막 발화`);
+  // 결정적 지점: 종료 제안 직후 상대가 이어간 첫 지점 > 첫 종결주장 > 요구 3회째
+  let turning='';
+  for(let i=0;i<seg.length-1;i++){if(K.stop.test(seg[i].x)&&seg[i+1].who!==seg[i].who){const r=seg[i+1];turning=`${T(r)} ${nm(r)}: "${Q(r)}" — 상대가 ${T(seg[i])}에 그만하자고 한 직후 다시 열었다. 이 뒤로 종료 신호가 기능하지 않는다.`;break;}}
+  if(!turning&&cl.length&&dem.length){const r=cl[0];turning=`${T(r)} ${nm(r)}: "${Q(r)}" — 상대의 요구에 답하지 않고 지난 일의 종결을 주장했다. 여기서 두 사람이 다른 질문에 답하기 시작한다.`;}
+  if(!turning&&dem.length>=3){const r=dem[2];turning=`${T(r)} ${nm(r)}: "${Q(r)}" — 같은 요구를 세 번째 반복. 앞의 두 번이 답을 받지 못했다.`;}
+  // 규칙 채점
+  const add=(who,pts,txt,improve)=>{score[who]+=pts;wr[who].push(txt);if(improve)imp[who].add(improve);};
+  // (1) 종료 제안 무시하고 재개
+  ['me','you'].forEach(w=>{const n=w==='me'?d.reMe:d.reYou;if(n>=1)add(w,2*n,`상대가 그만하자고 한 뒤 다시 연 것 ${n}회`,'상대가 "그만하자"고 하면 그 자리에서 멈춘다. 할 말은 다음 날 한 줄로.');});
+  // (2) 요구에 답하지 않고 종결 주장
+  ['me','you'].forEach(w=>{const n=w==='me'?d.closedMe:d.closedYou;const od=w==='me'?d.demandYou:d.demandMe;if(n>=2&&od>=1)add(w,2+n,`상대의 요구(${od}회)에 답하지 않고 "이미 사과했다/끝난 얘기"로 ${n}회 응수`,'요구를 들으면 "할게" 또는 "그건 어려워, 대신 ___" 중 하나로 답한다. 되묻지 않는다.');});
+  // (3) 같은 요구 반복(형태 바꾸지 않음)
+  ['me','you'].forEach(w=>{const n=w==='me'?d.demandMe:d.demandYou;if(n>=4)add(w,1+Math.floor(n/3),`같은 요구를 ${n}회 반복. 답을 못 받았을 때 형태를 바꾸지 않고 횟수만 늘렸다`,'요구는 한 줄로 한 번. 답이 없으면 "답을 못 들었어"라고 그 사실만 말한다.');});
+  // (4) 질문 연타
+  ['me','you'].forEach(w=>{const q=w==='me'?d.qMe:d.qYou,n=w==='me'?d.nMe:d.nYou,mx=w==='me'?d.maxMe:d.maxYou;if(n>=8&&q/n>=0.18)add(w,2,`발화의 ${Math.round(q/n*100)}%가 질문 형태(${q}회). 답이 아니라 되묻기로 대응`,'질문 대신 문장으로 말한다. "결론이 뭐야" 대신 "나는 이렇게 할게".');if(mx>=6)add(w,1,`한 번에 ${mx}개 연속 발송. 상대가 답할 틈 없이 밀어붙임`,'한 번에 한 개. 보내고 답을 기다린다.');});
+  // (5) 막연한 약속
+  ['me','you'].forEach(w=>{const p=w==='me'?d.promMe:d.promYou,sp=w==='me'?d.promSpecMe:d.promSpecYou;if(p>=1&&sp===0)add(w,1,`약속 문장 ${p}개가 전부 "안 그럴게/노력할게"류. 상황·시점·행동이 없다`,'약속은 "[상황]이 오면 [시점]에 [행동]할게" 형태로만 한다.');});
+  // (6) 상대 규정 / 인신
+  seg.forEach(m=>{if(/자기는 (원래|항상|맨날)|너는 (원래|항상|맨날)|이겨먹|고자세|사이코|미친/.test(m.x)&&!/아니고|아니야|아닌데|아니라/.test(m.x)){add(side(m),2,`${T(m)} "${Q(m)}" — 상대를 규정하는 표현`,'상대를 "원래 ~한 사람"으로 말하지 않는다. 그 행동 하나만 말한다.');}});
+  // (7) 욕설·격앙
+  seg.forEach(m=>{if(/존나|씨발|시발|이딴|지긋지긋|개 ?짜증/.test(m.x))add(side(m),2,`${T(m)} "${Q(m)}" — 격앙 표현`,'화가 올라오면 "지금은 못 하겠어, 내일"이라고 쓰고 폰을 놓는다.');});
+  // (8) 지쳐서 하는 사과(사과 후 즉시 철회/사족)
+  ['me','you'].forEach(w=>{const b=w==='me'?d.blameMe:d.blameYou,a=w==='me'?d.apolMe:d.apolYou;if(a>=4&&b>=2)add(w,1,`사과 ${a}회, 자책 ${b}회. 사과가 종료 수단으로 쓰이면 상대는 그것을 인정으로 기록한다`,'잘못이 아니면 사과하지 않는다. 끝내고 싶으면 "그만하자"만 쓴다.');});
+  // 감경
+  ['me','you'].forEach(w=>{const a=w==='me'?d.apolMe:d.apolYou,s_=w==='me'?d.stopMe:d.stopYou,f=(d.firstApol===w);if(f)mit[w].push('먼저 사과함');if(s_>=1)mit[w].push(`종료를 ${s_}회 제안`);if(a>=2&&!f)mit[w].push(`사과 ${a}회`);});
+  ['me','you'].forEach(w=>{if(!wr[w].length)wr[w].push('이 대화에서 확인되는 잘못 없음');});
+  const tot=score.me+score.you; let mp=tot?Math.round(score.me/tot*100):50; mp=Math.max(10,Math.min(90,mp)); const yp=100-mp;
+  const lead=mp>yp?'나':(yp>mp?you:'양쪽 동일');
+  const reason=tot?`가중 사유 합산 나 ${score.me}점, ${you} ${score.you}점. ${lead==='양쪽 동일'?'결정적 행위의 무게가 같다.':`결정적 행위는 ${lead} 쪽에 있다.`} ${turning?'결정적 지점 참조.':''}`:'가중 사유가 양쪽 모두 검출되지 않았다. 갈등 표현은 있었으나 규칙 위반은 없다.';
+  // 명령
+  let order='사과는 "미안해" 뒤에 "[상황]이 오면 [행동]할게"를 붙인다. 없으면 사과가 아니다.';
+  if(d.reMe+d.reYou>=2)order='"그만하자"가 나오면 그 자리에서 둘 다 멈춘다. 이어갈 말은 다음 날 한 줄로.';
+  else if(d.demandMe+d.demandYou>=3&&d.closedMe+d.closedYou>=2)order='요구에는 "할게" 또는 "못 해, 대신 ___"로만 답한다. "이미 사과했잖아"는 답이 아니다.';
+  // 해석
+  const meDem=dem.find(isMe),youDem=dem.find(m=>!isMe(m)),meCl=cl.find(isMe),youCl=cl.find(m=>!isMe(m));
+  const meFeel=seg.find(m=>isMe(m)&&/불안|서운|속상|무서|힘들|공허|답답/.test(m.x)),youFeel=seg.find(m=>!isMe(m)&&/불안|서운|속상|무서|힘들|공허|답답/.test(m.x));
+  const meant=(D,C,F,who)=>{if(D)return `"${Q(D)}" — 표면은 요구지만 아래에는 ${F?'"'+Q(F)+'"에서 보이듯 ':''}"내가 이 관계에서 빠져 있다"는 불안이 있다. 원하는 건 사과가 아니라 앞으로의 자리다.`;if(C)return `"${Q(C)}" — 표면은 종결 주장이지만 아래에는 "나는 이미 할 만큼 했는데 왜 계속 틀린 사람이 되냐"는 억울함이 있다. 원하는 건 승리가 아니라 인정이다.`;if(F)return `"${Q(F)}" — 이 감정 자체가 하고 싶은 말이다. 다만 설명이 길어져 요점이 묻혔다.`;return '이 대화에서는 요구도 종결 주장도 뚜렷하지 않다. 하고 싶은 말이 아직 문장이 되지 않았을 수 있다.';};
+  const better=(D,C,who)=>{if(D)return `"자기야, 나 그때 ${who==='me'?'좀 무서웠어':'좀 서운했어'}. 다음엔 결정하기 전에 나한테 한마디만 해줘. 그거면 돼."`;if(C)return `"미안해. 근데 나 지금 자기가 뭘 원하는지 모르겠어. 한 줄로 말해주면 그대로 할게."`;return `"지금은 말이 정리가 안 돼. 내일 얘기하자. 그만하자는 뜻 아니야."`;};
+  const reading={me:{meant:meant(meDem,meCl,meFeel,'me'),better:better(meDem,meCl,'me')},you:{meant:meant(youDem,youCl,youFeel,'you'),better:better(youDem,youCl,'you')}};
+  // MBTI 휴리스틱
+  const mb=(w)=>{const mine=m=>(w==='me')===isMe(m);const n=w==='me'?d.nMe:d.nYou,len=(w==='me'?d.lenMe:d.lenYou)/Math.max(1,n),q=(w==='me'?d.qMe:d.qYou)/Math.max(1,n),dm=w==='me'?d.demandMe:d.demandYou,cl_=w==='me'?d.closedMe:d.closedYou,mx=w==='me'?d.maxMe:d.maxYou;
+    const aff=seg.filter(m=>mine(m)&&K.aff.test(m.x)).length/Math.max(1,n),pat=seg.filter(m=>mine(m)&&/반복|패턴|같은 일|이번에도|결국 같은|매번/.test(m.x)).length,emo=seg.filter(m=>mine(m)&&/서운|속상|불안|무서|힘들|외로|기분 (나빠|안 좋)/.test(m.x)).length,frame=seg.filter(m=>mine(m)&&/본질|약속의 문제|구조|기준|문제는|정의|결론적으로/.test(m.x)&&!/자기 생각|자기가 (말|얘기)/.test(m.x)).length,harm=seg.filter(m=>mine(m)&&/풀자|풀고|풀리|풀렸|화해|서로 (기분|상처|좋)|얼른|아까운|감정소비|기분 상/.test(m.x)).length;
+    const E=n>=8&&mx>=4;const N=pat>=2&&len>=20;const Tt=harm>=2?false:(frame>=1||(dm>=2&&emo<=n*0.1)?true:!(emo>=n*0.12||aff>=0.05||(q>=0.2&&dm===0)));const J=cl_>=2||dm>=2||frame>=1;
+    const why=`${E?'한 번에 여러 개를 연달아 보내고':'한 번에 하나씩 보내고'}, ${N?'사건을 패턴으로 묶어 말하고':'이번 건 자체를 말하고'}, ${Tt?'감정보다 구조·요구를 앞세우고':'관계가 풀렸는지를 먼저 보고'}, ${J?'결론이나 규칙을 원한다':'그때그때 상황에 따라 움직인다'}.`;
+    return {type:(E?'E':'I')+(N?'N':'S')+(Tt?'T':'F')+(J?'J':'P'),why};};
+  const mbti={me:mb('me'),you:mb('you')};
+  // 진술 검증 (규칙)
+  let context=null;
+  if(ctx&&ctx.trim()){const c=ctx.trim();const fits=[],conflicts=[],unknown=[];
+    if(/사과했|미안하다고/.test(c)){(d.apolMe+d.apolYou)?fits.push(`사과: 대화에 사과 ${d.apolMe+d.apolYou}회 확인`):conflicts.push('진술에 사과가 있으나 이 대화에서 사과 발화가 확인되지 않음');}
+    if(/그만하자|그만두자|끝내자/.test(c)){(d.stopMe+d.stopYou)?fits.push(`종료 제안: 대화에 ${d.stopMe+d.stopYou}회 확인`):conflicts.push('진술에 종료 제안이 있으나 대화에서 확인되지 않음');}
+    if(/약속|안 그러겠다|안그러겠다/.test(c))unknown.push('이전 약속의 존재와 내용은 이 대화만으로 확인할 수 없음');
+    if(/저번|지난번|전에도|또/.test(c))unknown.push('이전 사건은 이 대화 밖의 일이라 확인 불가');
+    if(/내가 (먼저|계속) (참|넘어)/.test(c)&&(d.reMe>d.reYou))conflicts.push(`진술은 내가 참았다고 하나, 이 대화에서 "그만하자" 뒤 다시 연 것은 나 ${d.reMe}회 / ${you} ${d.reYou}회`);
+    if(!/내가|나도|제가/.test(c))conflicts.push('진술에 "나"의 행위가 없음. 상대 행위만 서술되어 있음');
+    context={fits,conflicts,unknown};}
+  const r={facts,turning,me:{wrong:wr.me,mitigating:mit.me,improve:[...imp.me]},you:{wrong:wr.you,mitigating:mit.you,improve:[...imp.you]},ruling:{me_pct:mp,you_pct:yp,reason},order,reading,mbti,context};
+  renderJudge(r,you,out);
+}
+function renderJudge(r,you,out){
+  const li=a=>(a||[]).map(x=>`<li>${escapeHtml(String(x))}</li>`).join('');
+  const mp=r.ruling.me_pct,yp=r.ruling.you_pct;
+    out.innerHTML=`
+      <div class="box" style="margin-top:12px"><h4>확정 사실</h4><ul>${li(r.facts)}</ul></div>
+      ${r.turning?`<div class="box" style="margin-top:10px;background:var(--lemon)"><h4>결정적 지점</h4><p style="margin:0;font-size:13px;font-weight:600">${escapeHtml(r.turning)}</p></div>`:''}
+      <div class="who">
+        <div class="box me"><h4>나</h4><div class="lbl">잘못</div><ul>${li(r.me&&r.me.wrong)||'<li>없음</li>'}</ul>${(r.me&&r.me.mitigating||[]).length?`<div class="lbl">감경</div><ul>${li(r.me.mitigating)}</ul>`:''}<div class="lbl">다음엔</div><ul>${li(r.me&&r.me.improve)}</ul></div>
+        <div class="box you"><h4>${escapeHtml(you)}</h4><div class="lbl">잘못</div><ul>${li(r.you&&r.you.wrong)||'<li>없음</li>'}</ul>${(r.you&&r.you.mitigating||[]).length?`<div class="lbl">감경</div><ul>${li(r.you.mitigating)}</ul>`:''}<div class="lbl">다음엔</div><ul>${li(r.you&&r.you.improve)}</ul></div>
+      </div>
+      <div class="box" style="margin-top:10px"><h4>과실 배분</h4>
+        <div class="pair" style="padding:0;border:0"><div class="track"><i class="l" style="width:${mp}%"></i><i class="r" style="width:${yp}%"></i><i class="mid"></i></div><div class="v num"><span class="me">나 ${mp}%</span><span class="you">${escapeHtml(you)} ${yp}%</span></div></div>
+        <p style="margin:8px 0 0;font-size:13px;font-weight:600">${escapeHtml((r.ruling||{}).reason||'')}</p></div>
+      ${r.context?`<div class="box" style="margin-top:10px"><h4>내 진술 검증</h4>
+        <div class="lbl">어긋나거나 빠진 것</div><ul>${li(r.context.conflicts)||'<li>없음</li>'}</ul>
+        ${(r.context.fits||[]).length?`<div class="lbl">대화로 확인됨</div><ul>${li(r.context.fits)}</ul>`:''}
+        ${(r.context.unknown||[]).length?`<div class="lbl">확인 불가</div><ul>${li(r.context.unknown)}</ul>`:''}</div>`:''}
+      ${r.order?`<div class="note" style="margin-top:10px;background:var(--ink);color:#fff">명령: ${escapeHtml(r.order)}</div>`:''}
+      ${r.reading?`<div style="margin-top:22px"><h2 style="margin-bottom:4px">재판 끝나고</h2><p class="mute" style="margin:0 0 8px;font-weight:700">여기부터는 판결이 아니라 해석이에요. 각자 진짜 하고 싶었던 말이 뭐였는지.</p>
+        <div class="who" style="margin-top:0">
+          <div class="box me"><h4>나는 사실</h4><p style="margin:0 0 8px;font-size:13px;font-weight:600">${escapeHtml(r.reading.me&&r.reading.me.meant||'')}</p><div class="lbl">이렇게 말했으면</div><p style="margin:0;font-size:13px;font-weight:700">${escapeHtml(r.reading.me&&r.reading.me.better||'')}</p></div>
+          <div class="box you"><h4>${escapeHtml(you)}는 사실</h4><p style="margin:0 0 8px;font-size:13px;font-weight:600">${escapeHtml(r.reading.you&&r.reading.you.meant||'')}</p><div class="lbl">이렇게 말했으면</div><p style="margin:0;font-size:13px;font-weight:700">${escapeHtml(r.reading.you&&r.reading.you.better||'')}</p></div>
+        </div></div>`:''}
+      ${r.mbti?`<div class="who"><div class="box" style="background:var(--mint)"><h4>나 · ${escapeHtml(r.mbti.me&&r.mbti.me.type||'?')} <span class="tag">추정</span></h4><p style="margin:0;font-size:13px;font-weight:600">${escapeHtml(r.mbti.me&&r.mbti.me.why||'')}</p></div>
+        <div class="box" style="background:var(--mint)"><h4>${escapeHtml(you)} · ${escapeHtml(r.mbti.you&&r.mbti.you.type||'?')} <span class="tag">추정</span></h4><p style="margin:0;font-size:13px;font-weight:600">${escapeHtml(r.mbti.you&&r.mbti.you.why||'')}</p></div></div>
+        <p class="mute" style="margin-top:6px">한 번의 대화로 하는 추정이라 재미로만 보세요. 말투는 상황 따라 달라져요.</p>`:''}
+      <p class="mute" style="margin-top:8px">대화 안에서 확인되는 행위를 정해진 규칙으로 채점했습니다. 감정과 의도는 채점하지 않습니다.</p>`;
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-judge]');if(!b)return;const d=JUDGE[b.dataset.judge];if(!d)return;
+  const you=b.dataset.you||(names.find(n=>n!==me)||'상대');const jb=b.closest('.judge');judge(d,you,b,jb.querySelector('.jOut'),(jb.querySelector('.ctx')||{}).value||'');jb.querySelector('.jOut').scrollIntoView({behavior:'smooth',block:'nearest'});});
+
+// ================= 이벤트 =================
+document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('on',x===b));$('#mShot').classList.toggle('hide',b.dataset.m!=='shot');$('#mFile').classList.toggle('hide',b.dataset.m!=='file');});
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));['tOver','tYear','tDays','tPaste','tHow'].forEach(id=>$('#'+id).classList.toggle('hide',id!==b.dataset.t));});
+$('#sideSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('#sideSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
+function dz(el,input,fn){el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('on');});el.addEventListener('dragleave',()=>el.classList.remove('on'));el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('on');fn(e.dataTransfer.files);});input.addEventListener('change',()=>fn(input.files));}
+dz($('#dropShot'),$('#shot'),files=>{shots=[...shots,...Array.from(files).filter(f=>f.type.startsWith('image/'))];
+  $('#thumbs').innerHTML=shots.map(f=>`<img src="${URL.createObjectURL(f)}" alt="">`).join('');$('#shotRow').classList.toggle('hide',!shots.length);});
+$('#readShots').onclick=readAll;
+dz($('#dropFile'),$('#file'),files=>{const f=files[0];if(!f)return;$('#fstat').textContent=`${f.name} 읽는 중…`;const r=new FileReader();
+  r.onload=()=>{msgs=parse(r.result);if(!msgs.length){$('#fstat').textContent='메시지를 찾지 못했습니다. 카카오톡 텍스트 내보내기 형식인지 확인하세요.';return;}
+    const c={};for(const m of msgs)c[m.who]=(c[m.who]||0)+1;names=Object.keys(c).sort((a,b)=>c[b]-c[a]).slice(0,2);
+    $('#whoSel').innerHTML=names.map(n=>`<option>${n}</option>`).join('');$('#fstat').textContent=`${f.name} · ${fmt(msgs.length)}건 · ${dayKey(msgs[0].t)} ~ ${dayKey(msgs[msgs.length-1].t)}`;$('#fileRow').classList.remove('hide');};
+  r.readAsText(f,'utf-8');});
+$('#runFile').onclick=()=>{me=$('#whoSel').value;renderFull();};
+$('#runPaste').onclick=()=>{const t=$('#paste').value.trim();if(!t)return;const pm=parsePaste(t);const out=$('#pasteOut');out.classList.remove('hide');
+  if(!pm.length){out.innerHTML='<p class="mute">형식을 읽지 못했습니다. "오후 03:52, 이름 : 내용" 형태여야 합니다.</p>';return;}
+  const c={};for(const m of pm)c[m.who]=(c[m.who]||0)+1;const ns=Object.keys(c).sort((a,b)=>c[b]-c[a]);const meP=ns.includes(me)?me:ns[0],youP=ns.find(n=>n!==meP)||'상대';
+  const dd=analyzeSeg('paste',pm,meP);registerDay(dd);out.innerHTML=`<div class="pairs">${pairsHtml([dd],youP)}</div><div style="margin-top:12px">${dayHtml(dd,youP,'이 대화').replace('data-judge=','data-you="'+youP.replace(/"/g,'')+'" data-judge=')}</div>`;};
+</script>
+</body>
+</html>
